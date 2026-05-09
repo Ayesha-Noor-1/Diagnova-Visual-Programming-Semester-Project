@@ -2,80 +2,87 @@
 @model Diagnova.Pages.DashboardModel
 @{
     ViewData["Title"] = "Dashboard";
+    ViewData["BodyClass"] = "dn-inner";
 }
 
-<h1 class="h3 mb-4">Health dashboard</h1>
+<div class="container py-4 py-md-5 dn-page-wide">
+    <header class="text-center mb-4 pb-2">
+        <p class="dn-page-eyebrow mb-0">Overview</p>
+        <h1 class="dn-page-title mb-2">Health dashboard</h1>
+        <p class="dn-page-lead mx-auto mb-0">Latest assistant insight, vitals snapshot, and quick links to every tool.</p>
+    </header>
 
-<div class="row g-3 mb-4">
-    <div class="col-md-4">
-        <div class="card h-100 shadow-sm border-0 bg-gradient-diagnova text-white">
-            <div class="card-body">
-                <h2 class="h6 text-uppercase opacity-75">Latest insight</h2>
-                @if (string.IsNullOrWhiteSpace(Model.LatestAssistantSummary))
-                {
-                    <p class="mb-0">No assistant replies yet. Open the symptom assistant to begin.</p>
-                }
-                else
-                {
-                    <p class="mb-0 small" style="white-space: pre-wrap;">@Model.LatestAssistantSummary</p>
-                }
-                <a class="btn btn-light btn-sm mt-3" asp-page="/Chat">Open assistant</a>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm border-0 rounded-4 bg-gradient-diagnova text-white">
+                <div class="card-body p-4">
+                    <h2 class="h6 text-uppercase opacity-75 mb-2">Latest insight</h2>
+                    @if (string.IsNullOrWhiteSpace(Model.LatestAssistantSummary))
+                    {
+                        <p class="mb-0 small">No assistant replies yet. Open the symptom assistant to begin.</p>
+                    }
+                    else
+                    {
+                        <p class="mb-0 small" style="white-space: pre-wrap;">@Model.LatestAssistantSummary</p>
+                    }
+                    <a class="btn btn-light btn-sm mt-3 rounded-pill fw-semibold text-success" asp-page="/Chat">Open assistant</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm border-0 rounded-4">
+                <div class="card-body p-4">
+                    <h2 class="h6 text-muted text-uppercase mb-2">Latest vitals</h2>
+                    @if (Model.LatestVitals is null)
+                    {
+                        <p class="mb-0 text-muted small">No vitals logged yet.</p>
+                    }
+                    else
+                    {
+                        <ul class="list-unstyled small mb-0">
+                            <li><strong>Recorded:</strong> @Model.LatestVitals.RecordedAt.LocalDateTime.ToString("g")</li>
+                            @if (Model.LatestVitals.SystolicMmHg.HasValue || Model.LatestVitals.DiastolicMmHg.HasValue)
+                            {
+                                <li><strong>BP:</strong> @(Model.LatestVitals.SystolicMmHg?.ToString() ?? "—")/@(Model.LatestVitals.DiastolicMmHg?.ToString() ?? "—") mmHg</li>
+                            }
+                            @if (Model.LatestVitals.BloodSugarMgDl.HasValue)
+                            {
+                                <li><strong>Glucose:</strong> @Model.LatestVitals.BloodSugarMgDl mg/dL</li>
+                            }
+                            @if (Model.LatestVitals.TemperatureC.HasValue)
+                            {
+                                <li><strong>Temp:</strong> @Model.LatestVitals.TemperatureC °C</li>
+                            }
+                        </ul>
+                    }
+                    <a class="btn dn-btn-outline-success btn-sm mt-3 rounded-pill" asp-page="/Vitals">Log vitals</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm border-0 rounded-4">
+                <div class="card-body p-4">
+                    <h2 class="h6 text-muted text-uppercase mb-2">History</h2>
+                    <p class="display-6 mb-0 text-success">@Model.ChatSessionCount</p>
+                    <p class="text-muted small mb-3">chat sessions stored</p>
+                    <a class="btn dn-btn-outline-success btn-sm rounded-pill" asp-page="/History">View history</a>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card h-100 shadow-sm">
-            <div class="card-body">
-                <h2 class="h6 text-muted text-uppercase">Latest vitals</h2>
-                @if (Model.LatestVitals is null)
-                {
-                    <p class="mb-0 text-muted">No vitals logged yet.</p>
-                }
-                else
-                {
-                    <ul class="list-unstyled small mb-0">
-                        <li><strong>Recorded:</strong> @Model.LatestVitals.RecordedAt.LocalDateTime.ToString("g")</li>
-                        @if (Model.LatestVitals.SystolicMmHg.HasValue || Model.LatestVitals.DiastolicMmHg.HasValue)
-                        {
-                            <li><strong>BP:</strong> @(Model.LatestVitals.SystolicMmHg?.ToString() ?? "—")/@(Model.LatestVitals.DiastolicMmHg?.ToString() ?? "—") mmHg</li>
-                        }
-                        @if (Model.LatestVitals.BloodSugarMgDl.HasValue)
-                        {
-                            <li><strong>Glucose:</strong> @Model.LatestVitals.BloodSugarMgDl mg/dL</li>
-                        }
-                        @if (Model.LatestVitals.TemperatureC.HasValue)
-                        {
-                            <li><strong>Temp:</strong> @Model.LatestVitals.TemperatureC °C</li>
-                        }
-                    </ul>
-                }
-                <a class="btn btn-outline-primary btn-sm mt-3" asp-page="/Vitals">Log vitals</a>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card h-100 shadow-sm">
-            <div class="card-body">
-                <h2 class="h6 text-muted text-uppercase">History</h2>
-                <p class="display-6 mb-0">@Model.ChatSessionCount</p>
-                <p class="text-muted small mb-3">chat sessions stored</p>
-                <a class="btn btn-outline-secondary btn-sm" asp-page="/History">View history</a>
-            </div>
-        </div>
-    </div>
-</div>
 
-<div class="row g-3">
-    <div class="col-md-3">
-        <a class="btn btn-outline-primary w-100 py-3" asp-page="/Chat">Symptom assistant</a>
-    </div>
-    <div class="col-md-3">
-        <a class="btn btn-outline-primary w-100 py-3" asp-page="/Medicine">Medicine lookup</a>
-    </div>
-    <div class="col-md-3">
-        <a class="btn btn-outline-primary w-100 py-3" asp-page="/Nearby">Hospitals nearby</a>
-    </div>
-    <div class="col-md-3">
-        <a class="btn btn-outline-primary w-100 py-3" asp-page="/Vitals">Vitals</a>
+    <div class="row g-3">
+        <div class="col-6 col-md-3">
+            <a class="btn dn-btn-outline-success w-100 py-3 rounded-4 fw-semibold" asp-page="/Chat">Assistant</a>
+        </div>
+        <div class="col-6 col-md-3">
+            <a class="btn dn-btn-outline-success w-100 py-3 rounded-4 fw-semibold" asp-page="/Medicine">Medicine</a>
+        </div>
+        <div class="col-6 col-md-3">
+            <a class="btn dn-btn-outline-success w-100 py-3 rounded-4 fw-semibold" asp-page="/Nearby">Nearby care</a>
+        </div>
+        <div class="col-6 col-md-3">
+            <a class="btn dn-btn-outline-success w-100 py-3 rounded-4 fw-semibold" asp-page="/Vitals">Vitals</a>
+        </div>
     </div>
 </div>

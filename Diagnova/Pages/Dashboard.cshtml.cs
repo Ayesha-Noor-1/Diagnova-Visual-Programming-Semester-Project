@@ -26,13 +26,13 @@ public class DashboardModel : PageModel
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
-        LatestAssistantSummary = await (
-            from m in _db.ChatMessages.AsNoTracking()
-            join s in _db.ChatSessions.AsNoTracking() on m.SessionId equals s.Id
-            where s.UserId == userId && m.Role == "assistant"
-            orderby m.CreatedAt descending
-            select m.Content
-        ).FirstOrDefaultAsync();
+        // Navigation-based filter translates cleanly to SQL (avoid Join + UtcDateTime which SQLite EF cannot compose).
+        LatestAssistantSummary = await _db.ChatMessages
+            .AsNoTracking()
+            .Where(m => m.Role == "assistant" && m.Session!.UserId == userId)
+            .OrderByDescending(m => m.CreatedAt)
+            .Select(m => m.Content)
+            .FirstOrDefaultAsync();
 
         if (!string.IsNullOrEmpty(LatestAssistantSummary) && LatestAssistantSummary.Length > 280)
             LatestAssistantSummary = LatestAssistantSummary[..280].TrimEnd() + "…";

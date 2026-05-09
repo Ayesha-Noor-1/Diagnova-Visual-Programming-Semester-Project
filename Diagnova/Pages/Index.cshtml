@@ -2,21 +2,73 @@
 @model IndexModel
 @{
     ViewData["Title"] = "Diagnova";
+    ViewData["BodyClass"] = "dn-landing";
 }
 
-<section class="py-5 text-center">
-    <div class="container col-lg-8">
-        <h1 class="display-5 fw-semibold mb-3">Diagnova</h1>
-        <p class="lead text-muted mb-4">
-            An AI-assisted symptom companion with conversation memory, medicine lookup (OpenFDA), vitals tracking,
-            emergency keyword detection, and room to plug in maps &amp; voice — built with ASP.NET Core.
+<section class="dn-hero text-center">
+    <div class="container col-xl-9">
+        <p class="small text-uppercase fw-semibold text-success mb-2" style="letter-spacing: 0.12em;">Your healthcare companion</p>
+        <h1 class="dn-hero-title mb-3">Diagnova — AI-guided symptom care</h1>
+        <p class="dn-hero-sub mb-4 col-lg-10 mx-auto">
+            Chat about symptoms, look up medicines (OpenFDA), track vitals, and get specialist-style guidance — with emergency safeguards built in.
         </p>
-        <div class="d-flex flex-column flex-sm-row gap-2 justify-content-center">
-            <a class="btn btn-primary btn-lg" asp-area="Identity" asp-page="/Account/Register">Create account</a>
-            <a class="btn btn-outline-primary btn-lg" asp-area="Identity" asp-page="/Account/Login">Sign in</a>
+
+        <div class="d-flex flex-wrap justify-content-center gap-2 mb-2">
+            <a class="btn dn-btn-success dn-new-chat-pill shadow-sm" asp-area="Identity" asp-page="/Account/Login">New chat — sign in</a>
+            <a class="btn dn-btn-outline-success dn-new-chat-pill" asp-area="Identity" asp-page="/Account/Register">Create account</a>
         </div>
-        <p class="small text-muted mt-4 mb-0">
-            Not medical advice. For emergencies call local services (Pakistan examples: 1122, 115, 1166).
-        </p>
+
+        <div class="dn-mascot" aria-hidden="true">
+            <partial name="_Icon" model='new IconModel { Id = "stethoscope", Size = 52, CssClass = "dn-icon dn-mascot-svg" }' />
+        </div>
+        <p class="fw-semibold mb-1">Welcome</p>
+        <p class="text-muted mb-0 small">How can we help you today?</p>
     </div>
+</section>
+
+<section class="container col-xl-10 pb-5">
+    <p class="text-center small text-muted mb-3">Jump to a topic</p>
+    <div class="dn-category-track px-1">
+        <div class="dn-category-scroll" role="list">
+        <a class="dn-category-card" asp-area="Identity" asp-page="/Account/Login" role="listitem">
+            <div class="dn-cat-label">Assistant</div>
+            <div class="dn-cat-icon">
+                <partial name="_Icon" model='new IconModel { Id = "chat", Size = 30, CssClass = "dn-icon" }' />
+            </div>
+            <div class="small mt-2 fw-semibold">Symptoms</div>
+        </a>
+        <a class="dn-category-card" asp-area="Identity" asp-page="/Account/Login" role="listitem">
+            <div class="dn-cat-label">Medicine</div>
+            <div class="dn-cat-icon">
+                <partial name="_Icon" model='new IconModel { Id = "pill", Size = 30, CssClass = "dn-icon" }' />
+            </div>
+            <div class="small mt-2 fw-semibold">Drug labels</div>
+        </a>
+        <a class="dn-category-card" asp-area="Identity" asp-page="/Account/Login" role="listitem">
+            <div class="dn-cat-label">Vitals</div>
+            <div class="dn-cat-icon">
+                <partial name="_Icon" model='new IconModel { Id = "chart", Size = 30, CssClass = "dn-icon" }' />
+            </div>
+            <div class="small mt-2 fw-semibold">BP &amp; glucose</div>
+        </a>
+        <a class="dn-category-card" asp-area="Identity" asp-page="/Account/Login" role="listitem">
+            <div class="dn-cat-label">Nearby</div>
+            <div class="dn-cat-icon">
+                <partial name="_Icon" model='new IconModel { Id = "hospital", Size = 30, CssClass = "dn-icon" }' />
+            </div>
+            <div class="small mt-2 fw-semibold">Care finder</div>
+        </a>
+        <a class="dn-category-card" asp-area="Identity" asp-page="/Account/Login" role="listitem">
+            <div class="dn-cat-label">History</div>
+            <div class="dn-cat-icon">
+                <partial name="_Icon" model='new IconModel { Id = "clipboard", Size = 30, CssClass = "dn-icon" }' />
+            </div>
+            <div class="small mt-2 fw-semibold">Past chats</div>
+        </a>
+        </div>
+    </div>
+
+    <p class="text-center dn-composer-hint mt-4 mb-0">
+        New to health chatbots? Keep descriptions clear: when it started, how strong, and what makes it better or worse.
+    </p>
 </section>

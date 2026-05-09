@@ -1,0 +1,51 @@
+@page
+@model Diagnova.Areas.Identity.Pages.Account.RegisterModel
+@{
+    ViewData["Title"] = "Create account";
+    ViewData["BodyClass"] = "dn-auth";
+}
+
+<div class="dn-auth-shell mx-auto">
+    <p class="text-center mb-3">
+        <a class="small link-secondary text-decoration-none fw-semibold" asp-area="" asp-page="/Index">← Back to Diagnova</a>
+    </p>
+    <div class="dn-auth-card card border-0 shadow-sm">
+        <div class="card-body p-4 p-md-5">
+            <p class="small text-uppercase fw-semibold text-success mb-2" style="letter-spacing: 0.12em;">Join Diagnova</p>
+            <h1 class="h3 fw-bold mb-1">Create your account</h1>
+            <p class="text-muted small mb-4">Symptom chat, medicine lookup, and vitals — after you sign in.</p>
+
+            <div asp-validation-summary="ModelOnly" class="text-danger small mb-3" role="alert"></div>
+
+            <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+                <div class="mb-3">
+                    <label asp-for="Input.Email" class="form-label small fw-semibold"></label>
+                    <input asp-for="Input.Email" class="form-control form-control-lg rounded-3" autocomplete="username" placeholder="you@example.com" />
+                    <span asp-validation-for="Input.Email" class="text-danger small"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Input.Password" class="form-label small fw-semibold"></label>
+                    <input asp-for="Input.Password" class="form-control form-control-lg rounded-3" autocomplete="new-password" />
+                    <span asp-validation-for="Input.Password" class="text-danger small"></span>
+                </div>
+                <div class="mb-4">
+                    <label asp-for="Input.ConfirmPassword" class="form-label small fw-semibold"></label>
+                    <input asp-for="Input.ConfirmPassword" class="form-control form-control-lg rounded-3" autocomplete="new-password" />
+                    <span asp-validation-for="Input.ConfirmPassword" class="text-danger small"></span>
+                </div>
+                <button type="submit" class="btn dn-btn-success w-100 rounded-pill py-2 fw-semibold">Register</button>
+            </form>
+
+            <hr class="my-4 text-muted opacity-25" />
+
+            <p class="small text-center text-muted mb-0">
+                Already have an account?
+                <a class="link-success text-decoration-none fw-semibold" asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl">Sign in</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

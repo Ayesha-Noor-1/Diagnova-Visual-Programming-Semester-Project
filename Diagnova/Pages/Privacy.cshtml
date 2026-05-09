@@ -1,8 +1,36 @@
 ﻿@page
 @model PrivacyModel
 @{
-    ViewData["Title"] = "Privacy Policy";
+    ViewData["Title"] = "Privacy";
+    ViewData["BodyClass"] = "dn-inner";
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<div class="container py-4 py-md-5 dn-page">
+    <header class="mb-4 pb-3 border-bottom border-opacity-10">
+        <p class="dn-page-eyebrow mb-0">Legal</p>
+        <h1 class="dn-page-title mb-2">Privacy &amp; data</h1>
+        <p class="dn-page-lead mb-0">How Diagnova treats information in this demo / coursework build. Replace with counsel-reviewed text before any public launch.</p>
+    </header>
+
+    <div class="dn-surface-card dn-surface-card-lg p-4 p-md-5 dn-prose">
+        <h2>What we store</h2>
+        <p>
+            Accounts use ASP.NET Core Identity with a local SQLite database. Chat sessions, messages, and vitals you submit are tied to your user id and kept on the server this app runs on.
+        </p>
+
+        <h2>Third parties</h2>
+        <p>
+            Medicine pages may call the U.S. FDA OpenFDA API. The symptom assistant may call an OpenAI-compatible API when configured. Those providers have their own privacy policies and retention rules.
+        </p>
+
+        <h2>AI disclaimer</h2>
+        <p>
+            Assistant output is generated and may be wrong or incomplete. It is not medical diagnosis or treatment. Do not rely on it for emergencies.
+        </p>
+
+        <h2>Your choices</h2>
+        <p>
+            You can stop using the app, delete local database files in development, or extend this page with export and account-deletion flows as your project evolves.
+        </p>
+    </div>
+</div>

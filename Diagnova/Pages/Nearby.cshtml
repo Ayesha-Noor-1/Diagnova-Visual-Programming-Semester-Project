@@ -2,20 +2,75 @@
 @model Diagnova.Pages.NearbyModel
 @{
     ViewData["Title"] = "Nearby care";
+    ViewData["BodyClass"] = "dn-inner";
 }
 
-<h1 class="h3 mb-3">Hospitals &amp; doctors nearby</h1>
+<div class="container py-4 py-md-5 dn-page-wide">
+    <header class="mb-4">
+        <p class="dn-page-eyebrow mb-0">Care finder</p>
+        <h1 class="dn-page-title mb-2">Hospitals &amp; doctors nearby</h1>
+        <p class="dn-page-lead mb-0">
+            This screen is ready for maps integration. Below is the planned experience so the product story stays clear for demos and coursework.
+        </p>
+    </header>
 
-<div class="alert alert-info">
-    <strong>Next step for this feature:</strong> add Google Maps JavaScript API + Places (Nearby Search) keys in configuration,
-    request the user’s location in the browser, and plot hospitals with markers. Keys must stay server-side or restricted by HTTP referrer.
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="dn-surface-card dn-surface-card-lg h-100 p-4 p-md-5">
+                <div class="d-flex align-items-start gap-3 mb-3">
+                    <div class="rounded-3 p-2 bg-success bg-opacity-10 text-success">
+                        <partial name="_Icon" model='new IconModel { Id = "hospital", Size = 28, CssClass = "dn-icon" }' />
+                    </div>
+                    <div>
+                        <h2 class="h5 fw-bold mb-1">Map &amp; places</h2>
+                        <p class="small text-muted mb-0">Wire Google Maps JavaScript API plus Places Nearby Search (or an alternative provider) with keys stored securely and referrer-restricted.</p>
+                    </div>
+                </div>
+                <ul class="list-unstyled small text-muted mb-0">
+                    <li class="mb-2 d-flex gap-2"><span class="text-success fw-bold">✓</span> Browser geolocation for lat/lng</li>
+                    <li class="mb-2 d-flex gap-2"><span class="text-success fw-bold">✓</span> Markers for hospitals and clinics</li>
+                    <li class="d-flex gap-2"><span class="text-success fw-bold">✓</span> Deep links to directions</li>
+                </ul>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="dn-surface-card dn-surface-card-lg h-100 p-4 p-md-5 border-success border-opacity-25" style="border-width: 2px;">
+                <div class="d-flex align-items-start gap-3 mb-3">
+                    <div class="rounded-3 p-2 bg-danger bg-opacity-10 text-danger">
+                        <partial name="_Icon" model='new IconModel { Id = "heart", Size = 28, CssClass = "dn-icon" }' />
+                    </div>
+                    <div>
+                        <h2 class="h5 fw-bold mb-1">Emergencies</h2>
+                        <p class="small text-muted mb-0">For severe or sudden symptoms, call emergency services — do not rely on map search timing.</p>
+                    </div>
+                </div>
+                <p class="small mb-0"><strong>Pakistan (verify locally):</strong> 1122 · 115 (Edhi) · 1166</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="dn-surface-card dn-surface-card-lg p-4 p-md-5">
+        <h2 class="h6 fw-bold text-uppercase text-muted mb-3" style="letter-spacing:0.08em;">Suggested build order</h2>
+        <div class="dn-roadmap-step">
+            <span class="dn-step-num">1</span>
+            <div>
+                <p class="fw-semibold mb-1">Geolocation prompt</p>
+                <p class="small text-muted mb-0">Request permission; fall back to manual city search if denied.</p>
+            </div>
+        </div>
+        <div class="dn-roadmap-step">
+            <span class="dn-step-num">2</span>
+            <div>
+                <p class="fw-semibold mb-1">Nearby Search</p>
+                <p class="small text-muted mb-0">Filter by type <code>hospital</code>, <code>doctor</code>, or specialty keywords from the assistant.</p>
+            </div>
+        </div>
+        <div class="dn-roadmap-step">
+            <span class="dn-step-num">3</span>
+            <div>
+                <p class="fw-semibold mb-1">Result cards</p>
+                <p class="small text-muted mb-0">Show distance, rating when available, phone, and a button to open maps directions.</p>
+            </div>
+        </div>
+    </div>
 </div>
-
-<p class="mb-2">Suggested flow:</p>
-<ul>
-    <li>Browser geolocation → latitude/longitude</li>
-    <li>Places Nearby Search (type <code>hospital</code> or <code>doctor</code>) filtered by specialty keywords from the assistant</li>
-    <li>Show distance, rating, and a link to Google Maps directions</li>
-</ul>
-
-<p class="text-muted small mb-0">Pakistan emergency reminder: <strong>1122</strong>, <strong>115</strong> (Edhi), <strong>1166</strong> — verify local numbers.</p>
