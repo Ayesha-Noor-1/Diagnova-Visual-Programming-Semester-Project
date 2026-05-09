@@ -1,0 +1,39 @@
+@page
+@model Diagnova.Pages.HistoryModel
+@{
+    ViewData["Title"] = "Patient history";
+}
+
+<h1 class="h3 mb-3">Chat history</h1>
+<p class="text-muted small mb-4">Sessions stored locally for your account. Export to PDF can be added next.</p>
+
+@if (Model.Sessions.Count == 0)
+{
+    <p class="text-muted">No sessions yet. Use the symptom assistant to create one.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Started</th>
+                    <th>Status</th>
+                    <th>Messages</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var s in Model.Sessions)
+            {
+                <tr>
+                    <td>@s.StartedAt.LocalDateTime.ToString("g")</td>
+                    <td>@(s.ClosedAt.HasValue ? "Closed" : "Active")</td>
+                    <td>@s.MessageCount</td>
+                    <td><a class="btn btn-sm btn-outline-primary" asp-page="/Chat">Continue in assistant</a></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}

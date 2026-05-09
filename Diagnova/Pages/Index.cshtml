@@ -1,0 +1,22 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Diagnova";
+}
+
+<section class="py-5 text-center">
+    <div class="container col-lg-8">
+        <h1 class="display-5 fw-semibold mb-3">Diagnova</h1>
+        <p class="lead text-muted mb-4">
+            An AI-assisted symptom companion with conversation memory, medicine lookup (OpenFDA), vitals tracking,
+            emergency keyword detection, and room to plug in maps &amp; voice — built with ASP.NET Core.
+        </p>
+        <div class="d-flex flex-column flex-sm-row gap-2 justify-content-center">
+            <a class="btn btn-primary btn-lg" asp-area="Identity" asp-page="/Account/Register">Create account</a>
+            <a class="btn btn-outline-primary btn-lg" asp-area="Identity" asp-page="/Account/Login">Sign in</a>
+        </div>
+        <p class="small text-muted mt-4 mb-0">
+            Not medical advice. For emergencies call local services (Pakistan examples: 1122, 115, 1166).
+        </p>
+    </div>
+</section>

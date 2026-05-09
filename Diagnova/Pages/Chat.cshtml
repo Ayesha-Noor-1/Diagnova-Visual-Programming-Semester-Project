@@ -1,0 +1,83 @@
+@page
+@model Diagnova.Pages.ChatModel
+@{
+    ViewData["Title"] = "Symptom assistant";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Symptom assistant</h1>
+    <form method="post" asp-page-handler="NewChat" class="m-0">
+        <button type="submit" class="btn btn-outline-secondary btn-sm">New conversation</button>
+    </form>
+</div>
+
+<p class="text-muted small mb-4">
+    Describe how you feel in your own words. Messages are saved for context on your next visit. This is not a diagnosis.
+</p>
+
+<div class="chat-thread border rounded p-3 mb-3 bg-light">
+    @if (Model.Messages.Count == 0)
+    {
+        <p class="text-muted mb-0">Start by typing your symptoms below.</p>
+    }
+    else
+    {
+        foreach (var line in Model.Messages)
+        {
+            var isUser = string.Equals(line.Role, "user", StringComparison.OrdinalIgnoreCase);
+            <div class="mb-3 @(isUser ? "text-end" : "")">
+                <div class="d-inline-block text-start chat-bubble @(isUser ? "chat-bubble-user" : "chat-bubble-assistant")">
+                    <div class="small text-uppercase opacity-75 mb-1">@(isUser ? "You" : "Diagnova")</div>
+                    <div class="chat-content">@line.Content</div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+<form method="post" class="mb-4">
+    <label class="form-label" for="UserInput">Your message</label>
+    <textarea asp-for="UserInput" id="UserInput" class="form-control" rows="3" placeholder="e.g. mild headache and sore throat for two days"></textarea>
+    <button type="submit" class="btn btn-primary mt-2">Send</button>
+</form>
+
+<div class="modal fade" id="emergencyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-danger">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Possible emergency — act now</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="fw-semibold mb-2">Matched keywords:</p>
+                <ul>
+                    @foreach (var k in Model.EmergencyKeywords)
+                    {
+                        <li>@k</li>
+                    }
+                </ul>
+                <p class="mb-2">Call local emergency services or go to the nearest emergency department if symptoms are severe.</p>
+                <p class="mb-0"><strong>Pakistan:</strong> 1122 · 115 (Edhi) · 1166 (examples — verify for your area).</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <a class="btn btn-danger" asp-page="/Nearby">Find nearby hospitals</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @if (Model.ShowEmergencyModal)
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var el = document.getElementById('emergencyModal');
+                if (el && window.bootstrap) {
+                    var modal = new bootstrap.Modal(el);
+                    modal.show();
+                }
+            });
+        </script>
+    }
+}

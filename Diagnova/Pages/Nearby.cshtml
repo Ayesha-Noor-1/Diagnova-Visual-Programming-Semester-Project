@@ -1,0 +1,21 @@
+@page
+@model Diagnova.Pages.NearbyModel
+@{
+    ViewData["Title"] = "Nearby care";
+}
+
+<h1 class="h3 mb-3">Hospitals &amp; doctors nearby</h1>
+
+<div class="alert alert-info">
+    <strong>Next step for this feature:</strong> add Google Maps JavaScript API + Places (Nearby Search) keys in configuration,
+    request the user’s location in the browser, and plot hospitals with markers. Keys must stay server-side or restricted by HTTP referrer.
+</div>
+
+<p class="mb-2">Suggested flow:</p>
+<ul>
+    <li>Browser geolocation → latitude/longitude</li>
+    <li>Places Nearby Search (type <code>hospital</code> or <code>doctor</code>) filtered by specialty keywords from the assistant</li>
+    <li>Show distance, rating, and a link to Google Maps directions</li>
+</ul>
+
+<p class="text-muted small mb-0">Pakistan emergency reminder: <strong>1122</strong>, <strong>115</strong> (Edhi), <strong>1166</strong> — verify local numbers.</p>

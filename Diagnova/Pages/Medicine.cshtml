@@ -1,0 +1,64 @@
+@page
+@model Diagnova.Pages.MedicineModel
+@{
+    ViewData["Title"] = "Medicine lookup";
+}
+
+<h1 class="h3 mb-3">Medicine information</h1>
+<p class="text-muted small">
+    Data from the U.S. FDA OpenFDA drug labels API (may not list every product worldwide).
+</p>
+
+<form method="get" class="row g-2 align-items-end mb-4">
+    <div class="col-md-8">
+        <label class="form-label" for="Query">Medicine name</label>
+        <input class="form-control" asp-for="Query" id="Query" placeholder="e.g. aspirin, acetaminophen" />
+    </div>
+    <div class="col-md-4">
+        <button type="submit" class="btn btn-primary w-100">Search</button>
+    </div>
+</form>
+
+@if (Model.Searched && Model.Result is null)
+{
+    <div class="alert alert-warning">No label found for that search. Try another spelling or generic name.</div>
+}
+
+@if (Model.Result is not null)
+{
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h2 class="h5">@(!string.IsNullOrEmpty(Model.Result.BrandName) ? Model.Result.BrandName : "Drug label")</h2>
+            @if (!string.IsNullOrEmpty(Model.Result.GenericName))
+            {
+                <p class="text-muted mb-3"><strong>Generic:</strong> @Model.Result.GenericName</p>
+            }
+
+            @if (!string.IsNullOrEmpty(Model.Result.Purpose))
+            {
+                <h3 class="h6">Purpose / indications</h3>
+                <p class="small" style="white-space: pre-wrap;">@Model.Result.Purpose</p>
+            }
+            @if (!string.IsNullOrEmpty(Model.Result.DosageAndAdministration))
+            {
+                <h3 class="h6">Dosage &amp; administration</h3>
+                <p class="small" style="white-space: pre-wrap;">@Model.Result.DosageAndAdministration</p>
+            }
+            @if (!string.IsNullOrEmpty(Model.Result.Warnings))
+            {
+                <h3 class="h6">Warnings</h3>
+                <p class="small" style="white-space: pre-wrap;">@Model.Result.Warnings</p>
+            }
+            @if (!string.IsNullOrEmpty(Model.Result.AdverseReactions))
+            {
+                <h3 class="h6">Adverse reactions</h3>
+                <p class="small" style="white-space: pre-wrap;">@Model.Result.AdverseReactions</p>
+            }
+            @if (!string.IsNullOrEmpty(Model.Result.Contraindications))
+            {
+                <h3 class="h6">Contraindications</h3>
+                <p class="small" style="white-space: pre-wrap;">@Model.Result.Contraindications</p>
+            }
+        </div>
+    </div>
+}

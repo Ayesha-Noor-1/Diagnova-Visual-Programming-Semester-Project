@@ -1,0 +1,106 @@
+@page
+@model Diagnova.Pages.VitalsModel
+@{
+    ViewData["Title"] = "Vitals";
+}
+
+<h1 class="h3 mb-3">Vitals tracker</h1>
+
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<form method="post" class="card shadow-sm mb-4">
+    <div class="card-body row g-3">
+        <div class="col-md-3">
+            <label class="form-label" asp-for="Input.SystolicMmHg">Systolic (mmHg)</label>
+            <input class="form-control" asp-for="Input.SystolicMmHg" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label" asp-for="Input.DiastolicMmHg">Diastolic (mmHg)</label>
+            <input class="form-control" asp-for="Input.DiastolicMmHg" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label" asp-for="Input.BloodSugarMgDl">Blood sugar (mg/dL)</label>
+            <input class="form-control" asp-for="Input.BloodSugarMgDl" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label" asp-for="Input.TemperatureC">Temperature (°C)</label>
+            <input class="form-control" asp-for="Input.TemperatureC" />
+        </div>
+        <div class="col-12">
+            <label class="form-label" asp-for="Input.Notes">Notes</label>
+            <input class="form-control" asp-for="Input.Notes" />
+        </div>
+        <div class="col-12">
+            <button type="submit" class="btn btn-primary">Save reading</button>
+        </div>
+    </div>
+</form>
+
+<h2 class="h5">Recent readings</h2>
+@if (Model.Recent.Count == 0)
+{
+    <p class="text-muted">No readings yet.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-sm align-middle">
+            <thead>
+                <tr>
+                    <th>When</th>
+                    <th>BP</th>
+                    <th>Glucose</th>
+                    <th>Temp °C</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var v in Model.Recent)
+            {
+                <tr>
+                    <td>@v.RecordedAt.LocalDateTime.ToString("g")</td>
+                    <td>@(v.SystolicMmHg?.ToString() ?? "—")/@(v.DiastolicMmHg?.ToString() ?? "—")</td>
+                    <td>@(v.BloodSugarMgDl?.ToString() ?? "—")</td>
+                    <td>@(v.TemperatureC?.ToString() ?? "—")</td>
+                    <td class="small">@v.Notes</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+
+    <canvas id="vitalsChart" height="120" class="mt-4"></canvas>
+}
+
+@section Scripts {
+    @if (Model.Recent.Count > 0)
+    {
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+        <script>
+            const rows = @Html.Raw(Model.ChartJson);
+
+            const labels = rows.map(r => r.t);
+            const bp = rows.map(r => r.bpSys);
+            const glu = rows.map(r => r.glucose);
+
+            const ctx = document.getElementById('vitalsChart');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        { label: 'Systolic BP', data: bp, borderColor: '#0d6efd', tension: 0.2, spanGaps: true },
+                        { label: 'Glucose', data: glu, borderColor: '#198754', tension: 0.2, spanGaps: true, yAxisID: 'y1' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: false, title: { display: true, text: 'BP (mmHg)' } },
+                        y1: { position: 'right', beginAtZero: false, grid: { drawOnChartArea: false }, title: { display: true, text: 'Glucose' } }
+                    }
+                }
+            });
+        </script>
+    }
+}

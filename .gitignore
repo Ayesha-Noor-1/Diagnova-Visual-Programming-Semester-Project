@@ -1,0 +1,28 @@
+## .NET / Visual Studio
+bin/
+obj/
+[Bb]uild/
+[Dd]ebug/
+[Rr]elease/
+*.user
+*.suo
+*.cache
+.vs/
+
+## SQLite / local data
+*.db
+*.db-shm
+*.db-wal
+
+## Secrets
+appsettings.*.local.json
+**/secrets.json
+
+## OS
+Thumbs.db
+Desktop.ini
+
+## Rider / VS Code (optional)
+.idea/
+.vscode/*
+!.vscode/extensions.json

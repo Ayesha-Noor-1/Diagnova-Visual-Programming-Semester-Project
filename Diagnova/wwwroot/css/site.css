@@ -1,0 +1,62 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 40%);
+}
+
+.bg-gradient-diagnova {
+  background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%);
+}
+
+.chat-thread {
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.chat-bubble {
+  max-width: min(640px, 100%);
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+}
+
+.chat-bubble-user {
+  background: #e7f1ff;
+  border: 1px solid #cfe2ff;
+}
+
+.chat-bubble-assistant {
+  background: #ffffff;
+  border: 1px solid #e9ecef;
+}
+
+.chat-content {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
+  color: var(--bs-secondary-color);
+  text-align: end;
+}
+
+.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
+  text-align: start;
+}
