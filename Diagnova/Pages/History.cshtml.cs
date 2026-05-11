@@ -1,19 +1,19 @@
 using System.Security.Claims;
-using Diagnova.Data;
+using Diagnova.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
+using MongoDB.Driver;
 
 namespace Diagnova.Pages;
 
 [Authorize]
 public class HistoryModel : PageModel
 {
-    private readonly AppDbContext _db;
+    private readonly MongoDbService _mongoDb;
 
-    public HistoryModel(AppDbContext db)
+    public HistoryModel(MongoDbService mongoDb)
     {
-        _db = db;
+        _mongoDb = mongoDb;
     }
 
     public IReadOnlyList<HistoryRow> Sessions { get; private set; } = Array.Empty<HistoryRow>();
@@ -22,17 +22,27 @@ public class HistoryModel : PageModel
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
-        Sessions = await _db.ChatSessions
-            .AsNoTracking()
-            .Where(s => s.UserId == userId)
-            .OrderByDescending(s => s.StartedAt)
-            .Select(s => new HistoryRow(
-                s.Id,
+        var sessions = await _mongoDb.ChatSessions
+            .Find(s => s.UserId == userId)
+            .SortByDescending(s => s.StartedAt)
+            .ToListAsync();
+
+        var result = new List<HistoryRow>();
+        foreach (var s in sessions)
+        {
+            var messageCount = await _mongoDb.ChatMessages
+                .Find(m => m.SessionId == s.Id)
+                .CountDocumentsAsync();
+
+            result.Add(new HistoryRow(
+                s.Id ?? string.Empty,
                 s.StartedAt,
                 s.ClosedAt,
-                s.Messages.Count))
-            .ToListAsync();
+                (int)messageCount));
+        }
+
+        Sessions = result;
     }
 }
 
-public sealed record HistoryRow(int Id, DateTimeOffset StartedAt, DateTimeOffset? ClosedAt, int MessageCount);
+public sealed record HistoryRow(string Id, DateTimeOffset StartedAt, DateTimeOffset? ClosedAt, int MessageCount);

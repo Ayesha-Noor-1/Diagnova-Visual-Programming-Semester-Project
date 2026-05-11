@@ -1,60 +1,65 @@
 using System.Security.Claims;
-using Diagnova.Data;
+using Diagnova.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
+using MongoDB.Driver;
 
 namespace Diagnova.Pages;
 
 [Authorize]
 public class DashboardModel : PageModel
 {
-    private readonly AppDbContext _db;
+    private readonly MongoDbService _mongoDb;
 
-    public DashboardModel(AppDbContext db)
+    public DashboardModel(MongoDbService mongoDb)
     {
-        _db = db;
+        _mongoDb = mongoDb;
     }
 
     public string? LatestAssistantSummary { get; private set; }
 
     public VitalReadingVm? LatestVitals { get; private set; }
 
-    public int ChatSessionCount { get; private set; }
+    public long ChatSessionCount { get; private set; }
 
     public async Task OnGetAsync()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
-        // Navigation-based filter translates cleanly to SQL (avoid Join + UtcDateTime which SQLite EF cannot compose).
-        LatestAssistantSummary = await _db.ChatMessages
-            .AsNoTracking()
-            .Where(m => m.Role == "assistant" && m.Session!.UserId == userId)
-            .OrderByDescending(m => m.CreatedAt)
-            .Select(m => m.Content)
-            .FirstOrDefaultAsync();
+        // Get latest assistant message
+        var latestMessages = await _mongoDb.ChatMessages
+            .Find(m => m.Role == "assistant")
+            .SortByDescending(m => m.CreatedAt)
+            .Limit(1)
+            .ToListAsync();
 
-        if (!string.IsNullOrEmpty(LatestAssistantSummary) && LatestAssistantSummary.Length > 280)
-            LatestAssistantSummary = LatestAssistantSummary[..280].TrimEnd() + "…";
-
-        var latest = await _db.VitalReadings.AsNoTracking()
-            .Where(v => v.UserId == userId)
-            .OrderByDescending(v => v.RecordedAt)
-            .FirstOrDefaultAsync();
-
-        if (latest != null)
+        if (latestMessages.Any())
         {
-            LatestVitals = new VitalReadingVm(
-                latest.RecordedAt,
-                latest.SystolicMmHg,
-                latest.DiastolicMmHg,
-                latest.BloodSugarMgDl,
-                latest.TemperatureC);
+            LatestAssistantSummary = latestMessages.First().Content;
+            if (!string.IsNullOrEmpty(LatestAssistantSummary) && LatestAssistantSummary.Length > 280)
+                LatestAssistantSummary = LatestAssistantSummary[..280].TrimEnd() + "…";
         }
 
-        ChatSessionCount = await _db.ChatSessions.AsNoTracking()
-            .Where(s => s.UserId == userId)
-            .CountAsync();
+        // Get latest vitals
+        var latestVitals = await _mongoDb.VitalReadings
+            .Find(v => v.UserId == userId)
+            .SortByDescending(v => v.RecordedAt)
+            .FirstOrDefaultAsync();
+
+        if (latestVitals != null)
+        {
+            LatestVitals = new VitalReadingVm(
+                latestVitals.RecordedAt,
+                latestVitals.SystolicMmHg,
+                latestVitals.DiastolicMmHg,
+                latestVitals.BloodSugarMgDl,
+                latestVitals.TemperatureC);
+        }
+
+        // Count chat sessions
+        ChatSessionCount = await _mongoDb.ChatSessions
+            .Find(s => s.UserId == userId)
+            .CountDocumentsAsync();
     }
 }
 

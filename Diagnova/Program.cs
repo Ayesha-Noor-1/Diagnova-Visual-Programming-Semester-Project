@@ -44,13 +44,28 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 // Lets MapStaticAssets / library bundles resolve when not running from `dotnet publish` output (e.g. Production env + dotnet run).
 builder.WebHost.UseStaticWebAssets();
 
+// SQL Server for Identity/Auth
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("SqlServerConnection")));
+
+// MongoDB settings
+builder.Services.Configure<MongoDbSettings>(options =>
+{
+    options.ConnectionString = builder.Configuration.GetConnectionString("MongoDbConnection") ?? "mongodb://localhost:27017";
+    options.DatabaseName = builder.Configuration["MongoDbSettings:DatabaseName"] ?? "DiagnovaMedicalDb";
+    options.ProfilesCollectionName = builder.Configuration["MongoDbSettings:ProfilesCollectionName"] ?? "MedicalProfiles";
+    options.ChatSessionsCollectionName = builder.Configuration["MongoDbSettings:ChatSessionsCollectionName"] ?? "ChatSessions";
+    options.ChatMessagesCollectionName = builder.Configuration["MongoDbSettings:ChatMessagesCollectionName"] ?? "ChatMessages";
+    options.VitalReadingsCollectionName = builder.Configuration["MongoDbSettings:VitalReadingsCollectionName"] ?? "VitalReadings";
+});
+
+builder.Services.AddSingleton<MongoDbService>();
 
 builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false;
     options.Password.RequiredLength = 6;
+    options.User.RequireUniqueEmail = true;
 })
 .AddEntityFrameworkStores<AppDbContext>();
 
@@ -93,6 +108,7 @@ app.MapStaticAssets();
 app.MapRazorPages()
     .WithStaticAssets();
 
+// Apply SQL Server migrations for Identity
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();

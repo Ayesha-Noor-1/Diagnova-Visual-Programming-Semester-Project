@@ -1,56 +1,66 @@
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
-using System.Text.Json;
-using Diagnova.Data;
 using Diagnova.Models;
+using Diagnova.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
+using MongoDB.Driver;
 
 namespace Diagnova.Pages;
 
 [Authorize]
 public class VitalsModel : PageModel
 {
-    private readonly AppDbContext _db;
+    private readonly MongoDbService _mongoDb;
 
-    public VitalsModel(AppDbContext db)
+    public VitalsModel(MongoDbService mongoDb)
     {
-        _db = db;
+        _mongoDb = mongoDb;
     }
 
     [BindProperty]
-    public VitalForm Input { get; set; } = new();
+    public VitalsInputModel Input { get; set; } = new();
 
-    public IReadOnlyList<VitalReading> Recent { get; private set; } = Array.Empty<VitalReading>();
+    public List<VitalReadingDisplay> Recent { get; set; } = new();
 
-    /// <summary>JSON array for Chart.js (oldest → newest).</summary>
-    public string ChartJson { get; private set; } = "[]";
+    public string ChartJson { get; set; } = "[]";
+
+    public class VitalsInputModel
+    {
+        public int? SystolicMmHg { get; set; }
+        public int? DiastolicMmHg { get; set; }
+        public double? BloodSugarMgDl { get; set; }
+        public double? TemperatureC { get; set; }
+        public string? Notes { get; set; }
+    }
+
+    public class VitalReadingDisplay
+    {
+        public DateTimeOffset RecordedAt { get; set; }
+        public int? SystolicMmHg { get; set; }
+        public int? DiastolicMmHg { get; set; }
+        public double? BloodSugarMgDl { get; set; }
+        public double? TemperatureC { get; set; }
+        public string? Notes { get; set; }
+    }
 
     public async Task OnGetAsync()
     {
-        await LoadRecentAsync();
+        await LoadReadingsAsync();
     }
 
     public async Task<IActionResult> OnPostAsync()
     {
-        await LoadRecentAsync();
-
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-
-        var hasAny =
-            Input.SystolicMmHg.HasValue ||
-            Input.DiastolicMmHg.HasValue ||
-            Input.BloodSugarMgDl.HasValue ||
-            Input.TemperatureC.HasValue;
-
-        if (!hasAny)
+        if (!ModelState.IsValid)
         {
-            ModelState.AddModelError(string.Empty, "Enter at least one measurement.");
+            await LoadReadingsAsync();
             return Page();
         }
 
-        _db.VitalReadings.Add(new VitalReading
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+        var reading = new MongoVitalReading
         {
             UserId = userId,
             RecordedAt = DateTimeOffset.UtcNow,
@@ -58,45 +68,43 @@ public class VitalsModel : PageModel
             DiastolicMmHg = Input.DiastolicMmHg,
             BloodSugarMgDl = Input.BloodSugarMgDl,
             TemperatureC = Input.TemperatureC,
-            Notes = string.IsNullOrWhiteSpace(Input.Notes) ? null : Input.Notes.Trim(),
-        });
+            Notes = Input.Notes
+        };
 
-        await _db.SaveChangesAsync();
+        await _mongoDb.VitalReadings.InsertOneAsync(reading);
+        await LoadReadingsAsync();
 
-        Input = new VitalForm();
-        await LoadRecentAsync();
         return Page();
     }
 
-    private async Task LoadRecentAsync()
+    private async Task LoadReadingsAsync()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        Recent = await _db.VitalReadings.AsNoTracking()
-            .Where(v => v.UserId == userId)
-            .OrderByDescending(v => v.RecordedAt)
-            .Take(30)
+
+        var readings = await _mongoDb.VitalReadings
+            .Find(v => v.UserId == userId)
+            .SortByDescending(v => v.RecordedAt)
+            .Limit(20)
             .ToListAsync();
 
-        var forChart = Recent.OrderBy(v => v.RecordedAt).Select(v => new
+        Recent = readings.Select(r => new VitalReadingDisplay
         {
-            t = v.RecordedAt.LocalDateTime.ToString("MM/dd HH:mm"),
-            bpSys = v.SystolicMmHg,
-            glucose = v.BloodSugarMgDl,
+            RecordedAt = r.RecordedAt,
+            SystolicMmHg = r.SystolicMmHg,
+            DiastolicMmHg = r.DiastolicMmHg,
+            BloodSugarMgDl = r.BloodSugarMgDl,
+            TemperatureC = r.TemperatureC,
+            Notes = r.Notes
         }).ToList();
 
-        ChartJson = JsonSerializer.Serialize(forChart);
-    }
+        // Prepare chart data
+        var chartData = readings.OrderBy(r => r.RecordedAt).Select(r => new
+        {
+            t = r.RecordedAt.LocalDateTime.ToString("MM/dd"),
+            bpSys = r.SystolicMmHg,
+            glucose = r.BloodSugarMgDl
+        });
 
-    public sealed class VitalForm
-    {
-        public int? SystolicMmHg { get; set; }
-
-        public int? DiastolicMmHg { get; set; }
-
-        public double? BloodSugarMgDl { get; set; }
-
-        public double? TemperatureC { get; set; }
-
-        public string? Notes { get; set; }
+        ChartJson = System.Text.Json.JsonSerializer.Serialize(chartData);
     }
 }
