@@ -1,0 +1,38 @@
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<Diagnova.Models.ApplicationUser> SignInManager
+@inject UserManager<Diagnova.Models.ApplicationUser> UserManager
+
+<ul class="navbar-nav ms-auto align-items-lg-center gap-1 flex-row flex-wrap dn-auth-nav">
+@if (SignInManager.IsSignedIn(User))
+{
+    <li class="nav-item">
+        <a class="nav-link dn-nav-link py-2" asp-page="/Dashboard">Dashboard</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link dn-nav-link py-2" asp-page="/Chat">Assistant</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link dn-nav-link py-2 d-none d-md-inline" asp-page="/Medicine">Medicine</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link dn-nav-link py-2 d-none d-md-inline" asp-page="/Vitals">Vitals</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link dn-nav-link py-2 d-none d-lg-inline" asp-page="/History">History</a>
+    </li>
+    <li class="nav-item">
+        <form class="m-0" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/Index")">
+            <button type="submit" class="btn btn-link nav-link dn-nav-link py-2 border-0">Logout</button>
+        </form>
+    </li>
+}
+else
+{
+    <li class="nav-item">
+        <a class="btn dn-btn-outline-success rounded-pill px-3 me-2" asp-area="Identity" asp-page="/Account/Register">Register</a>
+    </li>
+    <li class="nav-item">
+        <a class="btn dn-btn-success rounded-pill px-4" asp-area="Identity" asp-page="/Account/Login">Login</a>
+    </li>
+}
+</ul>

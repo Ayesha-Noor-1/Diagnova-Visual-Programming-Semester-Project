@@ -1,0 +1,129 @@
+@page
+@model Diagnova.Pages.ChatModel
+@{
+    ViewData["Title"] = "Symptom assistant";
+    ViewData["BodyClass"] = "dn-inner";
+}
+
+<div class="dn-chat-page pt-3 pt-md-4">
+    <div class="dn-chat-toolbar">
+        <a class="btn btn-sm dn-btn-outline-success rounded-pill px-3 d-inline-flex align-items-center gap-2" asp-page="/Dashboard"><partial name="_Icon" model='new IconModel { Id = "arrow-left", Size = 18, CssClass = "dn-icon flex-shrink-0" }' /> Back</a>
+        <form method="post" asp-page-handler="NewChat" class="m-0">
+            <button type="submit" class="btn btn-sm dn-btn-success rounded-pill px-3">New conversation</button>
+        </form>
+    </div>
+
+    <p class="dn-chat-disclaimer mb-0">
+        Disclaimer: AI responses are for informational purposes only. Consult healthcare professionals for medical advice.
+    </p>
+
+    <div class="dn-chat-shell mt-2 mb-0">
+        @if (Model.Messages.Count == 0)
+        {
+            <div class="text-center text-muted py-5">
+                <div class="dn-mascot dn-mascot-lg mx-auto mb-3" aria-hidden="true">
+                    <partial name="_Icon" model='new IconModel { Id = "stethoscope", Size = 48, CssClass = "dn-icon dn-mascot-svg" }' />
+                </div>
+                <p class="mb-1 fw-semibold text-dark">Diagnova assistant</p>
+                <p class="small mb-0">Describe how you feel — past chats are remembered for better context.</p>
+            </div>
+        }
+        else
+        {
+            foreach (var line in Model.Messages)
+            {
+                var isUser = string.Equals(line.Role, "user", StringComparison.OrdinalIgnoreCase);
+                <div class="dn-msg-row @(isUser ? "user" : "")">
+                    @if (!isUser)
+                    {
+                        <div class="dn-avatar bot" aria-hidden="true">
+                            <partial name="_Icon" model='new IconModel { Id = "assistant", Size = 18, CssClass = "dn-icon dn-avatar-svg" }' />
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="dn-avatar user" aria-hidden="true">
+                            <partial name="_Icon" model='new IconModel { Id = "user", Size = 18, CssClass = "dn-icon dn-avatar-svg" }' />
+                        </div>
+                    }
+                    <div class="dn-msg-bubble text-start">
+                        <div class="dn-msg-meta">@(isUser ? "You" : "Diagnova")</div>
+                        <div class="dn-chat-content">@line.Content</div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    <div class="dn-composer-wrap">
+        <p class="dn-composer-hint text-center mb-2">
+            Tip: mention duration and severity. <span class="text-success fw-semibold">Not a substitute for emergency care.</span>
+        </p>
+        <form method="post" id="chatForm">
+            <div class="dn-composer">
+                <span class="align-self-center ps-1 dn-composer-attach" aria-hidden="true" title="Attachments coming soon">
+                    <partial name="_Icon" model='new IconModel { Id = "plus", Size = 22, CssClass = "dn-icon text-muted flex-shrink-0" }' />
+                </span>
+                <textarea asp-for="UserInput" id="UserInput" class="form-control flex-grow-1" rows="1" placeholder="Ask anything about your health…" autocomplete="off"></textarea>
+                <div class="dn-composer-actions pe-1">
+                    <button type="button" class="dn-mic-btn" disabled title="Voice input coming soon">
+                        <partial name="_Icon" model='new IconModel { Id = "mic", Size = 22, CssClass = "dn-icon flex-shrink-0" }' />
+                    </button>
+                    <button type="submit" class="btn dn-btn-success dn-send-btn">
+                        <partial name="_Icon" model='new IconModel { Id = "send", Size = 18, CssClass = "dn-icon flex-shrink-0" }' /> Send
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="emergencyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-danger">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Possible emergency — act now</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="fw-semibold mb-2">Matched keywords:</p>
+                <ul class="mb-3">
+                    @foreach (var k in Model.EmergencyKeywords)
+                    {
+                        <li>@k</li>
+                    }
+                </ul>
+                <p class="mb-2">Call emergency services or go to the nearest ER if symptoms are severe.</p>
+                <p class="mb-0"><strong>Pakistan:</strong> 1122 · 115 (Edhi) · 1166 — verify for your area.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <a class="btn btn-danger" asp-page="/Nearby">Find nearby hospitals</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @if (Model.ShowEmergencyModal)
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var el = document.getElementById('emergencyModal');
+                if (el && window.bootstrap) {
+                    new bootstrap.Modal(el).show();
+                }
+            });
+        </script>
+    }
+    <script>
+        (function () {
+            var ta = document.getElementById('UserInput');
+            if (!ta) return;
+            ta.addEventListener('input', function () {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 140) + 'px';
+            });
+        })();
+    </script>
+}

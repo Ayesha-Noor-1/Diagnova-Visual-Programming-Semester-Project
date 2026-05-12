@@ -1,0 +1,65 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Diagnova</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+    <script type="importmap"></script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="@(ViewData["BodyClass"] ?? "")">
+    <header class="dn-header sticky-top">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom py-2 dn-nav-shadow">
+            <div class="container-fluid container-lg px-3">
+                <a class="navbar-brand dn-brand fw-bold text-dark me-3" asp-area="" asp-page="/Index">Diagnova</a>
+
+                <div class="d-none d-lg-flex flex-grow-1 justify-content-center px-2 dn-search-cluster mx-xl-4">
+                    <form class="dn-search-bar w-100" method="get" asp-page="/Medicine" role="search">
+                        <span class="dn-search-prefix text-muted small"><partial name="_Icon" model='new IconModel { Id = "pin", Size = 16, CssClass = "dn-icon dn-icon-muted flex-shrink-0" }' /> Explore</span>
+                        <input type="search" name="Query" class="form-control border-0 shadow-none flex-grow-1" placeholder="Search medicine, symptom, topic…" autocomplete="off" />
+                        <button type="submit" class="btn dn-btn-icon text-muted" aria-label="Search"><partial name="_Icon" model='new IconModel { Id = "search", Size = 20, CssClass = "dn-icon flex-shrink-0" }' /></button>
+                    </form>
+                </div>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#dnNav" aria-controls="dnNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="dnNav">
+                    <div class="d-lg-none mt-3 mb-2">
+                        <form class="dn-search-bar w-100" method="get" asp-page="/Medicine">
+                            <input type="search" name="Query" class="form-control border-0 shadow-none" placeholder="Search medicine…" />
+                            <button type="submit" class="btn dn-btn-ghost text-success">Go</button>
+                        </form>
+                    </div>
+                    <div class="navbar-nav ms-lg-auto align-items-lg-center gap-1 gap-lg-2 flex-wrap">
+                        <span class="nav-link disabled d-none d-xl-inline-flex align-items-center text-muted small py-1 gap-1" title="Pharmacy cart (coming soon)"><partial name="_Icon" model='new IconModel { Id = "cart", Size = 22, CssClass = "dn-icon dn-icon-cart flex-shrink-0" }' /></span>
+                        <partial name="_LoginPartial" />
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main role="main" class="dn-main pb-5">
+        @RenderBody()
+    </main>
+
+    <footer class="dn-footer border-top py-4 mt-auto bg-white">
+        <div class="container small text-muted text-center">
+            &copy; @DateTime.UtcNow.Year Diagnova · <a asp-area="" asp-page="/Privacy" class="link-secondary">Privacy</a>
+            · AI output is informational only — consult qualified professionals for medical decisions.
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

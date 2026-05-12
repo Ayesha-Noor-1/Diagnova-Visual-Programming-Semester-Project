@@ -1,0 +1,1337 @@
+@page
+@model Diagnova.Areas.Identity.Pages.Account.RegisterModel
+@{
+    ViewData["Title"] = "Create account";
+    ViewData["BodyClass"] = "dn-auth";
+}
+
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body.dn-auth {
+        font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        background: linear-gradient(135deg, #e8f0ec 0%, #dce8e2 100%);
+        color: #1a3a2c;
+        overflow-x: hidden;
+    }
+
+    .register-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+
+    .register-card {
+        max-width: 1300px;
+        width: 100%;
+        background: white;
+        border-radius: 32px;
+        display: flex;
+        flex-wrap: wrap;
+        overflow: hidden;
+        box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    /* Left Sidebar - Enhanced */
+    .steps-sidebar {
+        width: 320px;
+        background: linear-gradient(165deg, #1a5c3e 0%, #1e6e45 100%);
+        padding: 2rem 1.8rem;
+        position: relative;
+        backdrop-filter: blur(10px);
+    }
+
+        .steps-sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.05"><circle cx="20" cy="20" r="8"/><circle cx="80" cy="30" r="12"/><circle cx="50" cy="70" r="10"/><circle cx="15" cy="85" r="6"/><circle cx="90" cy="75" r="9"/></svg>');
+            background-repeat: repeat;
+            pointer-events: none;
+        }
+
+    .logo-area {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 2.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        position: relative;
+        z-index: 1;
+    }
+
+    .logo-icon {
+        width: 40px;
+        height: 40px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(5px);
+    }
+
+        .logo-icon i {
+            font-size: 1.3rem;
+            color: white;
+        }
+
+    .logo-text {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: white;
+        letter-spacing: -0.3px;
+    }
+
+    .step-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 0.9rem 0;
+        margin-bottom: 0.5rem;
+        position: relative;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border-radius: 12px;
+    }
+
+        .step-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            padding-left: 8px;
+        }
+
+    .step-number-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        font-weight: 700;
+        background: rgba(255, 255, 255, 0.15);
+        color: rgba(255, 255, 255, 0.7);
+        transition: all 0.3s;
+        flex-shrink: 0;
+    }
+
+        .step-number-circle.active {
+            background: white;
+            color: #1a5c3e;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .step-number-circle.completed {
+            background: #2d8b5a;
+            color: white;
+        }
+
+            .step-number-circle.completed i {
+                font-size: 0.8rem;
+            }
+
+    .step-info {
+        flex: 1;
+    }
+
+    .step-title {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 0.2rem;
+    }
+
+    .step-desc {
+        font-size: 0.7rem;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .step-item.active .step-title {
+        color: white;
+    }
+
+    .step-item:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        left: 19px;
+        top: 48px;
+        width: 2px;
+        height: 45px;
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+    .sidebar-quote {
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.15);
+        position: relative;
+        z-index: 1;
+    }
+
+        .sidebar-quote p {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+            font-style: italic;
+            line-height: 1.5;
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-quote span {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+    /* Right Side - Enhanced Form */
+    .form-container {
+        flex: 1;
+        padding: 2.5rem;
+        background: white;
+    }
+
+    /* Removed progress-header styles */
+
+    .form-step {
+        display: none;
+        animation: fadeIn 0.4s ease-out;
+    }
+
+        .form-step.active-step {
+            display: block;
+        }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .step-header {
+        margin-bottom: 2rem;
+    }
+
+    .step-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0.3rem 1rem;
+        background: linear-gradient(135deg, rgba(26, 92, 62, 0.1), rgba(45, 139, 90, 0.1));
+        border-radius: 60px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #1a5c3e;
+        margin-bottom: 0.75rem;
+        letter-spacing: 0.5px;
+    }
+
+    .step-header h2 {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #1a3a2c;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.3px;
+    }
+
+    .step-header p {
+        color: #7a8e82;
+        font-size: 0.9rem;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.25rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .full-width {
+        grid-column: span 2;
+    }
+
+    .form-label {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #2d473a;
+    }
+
+        .form-label .required {
+            color: #e74c3c;
+            margin-left: 3px;
+        }
+
+    .input-wrapper {
+        position: relative;
+    }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9bb3a7;
+            font-size: 0.9rem;
+            z-index: 1;
+            transition: color 0.2s;
+        }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 2.5rem;
+        border: 1.5px solid #e0e8e3;
+        border-radius: 14px;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+        background: #fefefe;
+        font-family: inherit;
+    }
+
+        .form-control:hover {
+            border-color: #b8d0c4;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #1a5c3e;
+            box-shadow: 0 0 0 3px rgba(26, 92, 62, 0.08);
+            background: white;
+        }
+
+    .input-wrapper:focus-within i {
+        color: #1a5c3e;
+    }
+
+    .form-control.error {
+        border-color: #e74c3c;
+    }
+
+    /* Custom Multi-Select with Tags - Enhanced */
+    .multi-select-container {
+        position: relative;
+    }
+
+    .multi-select-trigger {
+        width: 100%;
+        padding: 0.75rem 2.5rem 0.75rem 2.5rem;
+        border: 1.5px solid #e0e8e3;
+        border-radius: 14px;
+        background: #fefefe;
+        cursor: pointer;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        min-height: 48px;
+        align-items: center;
+        transition: all 0.2s;
+    }
+
+        .multi-select-trigger:hover {
+            border-color: #b8d0c4;
+        }
+
+        .multi-select-trigger.open {
+            border-color: #1a5c3e;
+            box-shadow: 0 0 0 3px rgba(26, 92, 62, 0.08);
+        }
+
+        .multi-select-trigger i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9bb3a7;
+        }
+
+        .multi-select-trigger .arrow {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9bb3a7;
+            transition: transform 0.2s;
+        }
+
+        .multi-select-trigger.open .arrow {
+            transform: translateY(-50%) rotate(180deg);
+            color: #1a5c3e;
+        }
+
+    .selected-tag {
+        background: linear-gradient(135deg, #e8f3ec, #dcebe2);
+        color: #1a5c3e;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+    }
+
+        .selected-tag:hover {
+            background: #d4e8db;
+        }
+
+        .selected-tag i {
+            position: static;
+            font-size: 0.7rem;
+            cursor: pointer;
+            color: #6b8b7a;
+            transform: none;
+        }
+
+            .selected-tag i:hover {
+                color: #e74c3c;
+            }
+
+    .multi-select-dropdown {
+        position: absolute;
+        top: calc(100% + 5px);
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1.5px solid #e0e8e3;
+        border-radius: 14px;
+        max-height: 280px;
+        overflow-y: auto;
+        z-index: 100;
+        display: none;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    }
+
+        .multi-select-dropdown.show {
+            display: block;
+            animation: dropdownFade 0.2s ease;
+        }
+
+    @@keyframes dropdownFade {
+        from {
+            opacity: 0;
+            transform: translateY(-5px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .dropdown-option {
+        padding: 10px 15px;
+        cursor: pointer;
+        transition: background 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.85rem;
+    }
+
+        .dropdown-option:hover {
+            background: #f5f9f6;
+        }
+
+        .dropdown-option.selected {
+            background: #e8f3ec;
+            color: #1a5c3e;
+            font-weight: 500;
+        }
+
+        .dropdown-option input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: #1a5c3e;
+        }
+
+    .custom-input-area {
+        padding: 10px 15px;
+        border-top: 1px solid #e0e8e3;
+        display: flex;
+        gap: 8px;
+        background: #fafcfb;
+    }
+
+        .custom-input-area input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1.5px solid #e0e8e3;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+            .custom-input-area input:focus {
+                outline: none;
+                border-color: #1a5c3e;
+            }
+
+        .custom-input-area button {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #1a5c3e, #2d8b5a);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+
+            .custom-input-area button:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 4px 10px rgba(26, 92, 62, 0.3);
+            }
+
+    .error-message {
+        font-size: 0.7rem;
+        color: #e74c3c;
+        margin-top: 2px;
+    }
+
+    .hint-text {
+        font-size: 0.7rem;
+        color: #9aaea2;
+        margin-top: 2px;
+    }
+
+    .bmi-card {
+        background: linear-gradient(135deg, #f0f7f2, #e8f3ec);
+        border-radius: 16px;
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 0.5rem;
+        border: 1px solid rgba(26, 92, 62, 0.1);
+    }
+
+    .bmi-icon {
+        width: 48px;
+        height: 48px;
+        background: white;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+        .bmi-icon i {
+            font-size: 1.3rem;
+            color: #1a5c3e;
+        }
+
+    .bmi-info {
+        flex: 1;
+    }
+
+    .bmi-value {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1a5c3e;
+    }
+
+    .bmi-category {
+        font-size: 0.75rem;
+        color: #6b8b7a;
+    }
+
+    .security-question-area {
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+        .security-question-area.hidden {
+            display: none;
+        }
+
+    .form-navigation {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 2.5rem;
+        padding-top: 2rem;
+        border-top: 1px solid #eef2ef;
+    }
+
+    .btn-prev {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0.75rem 1.5rem;
+        background: transparent;
+        border: 1.5px solid #e0e8e3;
+        border-radius: 40px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #6c7e74;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: inherit;
+    }
+
+        .btn-prev:hover {
+            border-color: #1a5c3e;
+            color: #1a5c3e;
+            transform: translateX(-2px);
+        }
+
+    .btn-next, .btn-submit {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0.75rem 2rem;
+        background: linear-gradient(135deg, #1a5c3e, #2d8b5a);
+        border: none;
+        border-radius: 40px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: white;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-left: auto;
+        font-family: inherit;
+        box-shadow: 0 2px 8px rgba(26, 92, 62, 0.2);
+    }
+
+        .btn-next:hover, .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(26, 92, 62, 0.3);
+        }
+
+    @@media (max-width: 900px) {
+        .steps-sidebar {
+            display: none;
+        }
+        
+        .register-card {
+            max-width: 550px;
+        }
+        
+        .form-container {
+            padding: 1.5rem;
+        }
+        
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .full-width {
+            grid-column: span 1;
+        }
+    }
+</style>
+
+<div class="register-container">
+    <div class="register-card">
+        <!-- Left Sidebar -->
+        <div class="steps-sidebar">
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <i class="fas fa-stethoscope"></i>
+                </div>
+                <span class="logo-text">Diagnova</span>
+            </div>
+
+            <div class="steps-list">
+                <div class="step-item" data-step="0">
+                    <div class="step-number-circle" id="step1Num">1</div>
+                    <div class="step-info">
+                        <div class="step-title">Personal Information</div>
+                        <div class="step-desc">Your basic details</div>
+                    </div>
+                </div>
+                <div class="step-item" data-step="1">
+                    <div class="step-number-circle" id="step2Num">2</div>
+                    <div class="step-info">
+                        <div class="step-title">Health Metrics</div>
+                        <div class="step-desc">Body & vitals</div>
+                    </div>
+                </div>
+                <div class="step-item" data-step="2">
+                    <div class="step-number-circle" id="step3Num">3</div>
+                    <div class="step-info">
+                        <div class="step-title">Medical History</div>
+                        <div class="step-desc">Conditions & allergies</div>
+                    </div>
+                </div>
+                <div class="step-item" data-step="3">
+                    <div class="step-number-circle" id="step4Num">4</div>
+                    <div class="step-info">
+                        <div class="step-title">Health Goals</div>
+                        <div class="step-desc">Your wellness targets</div>
+                    </div>
+                </div>
+                <div class="step-item" data-step="4">
+                    <div class="step-number-circle" id="step5Num">5</div>
+                    <div class="step-info">
+                        <div class="step-title">Emergency & Security</div>
+                        <div class="step-desc">Safety & recovery</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-quote">
+                <p>"Your health journey matters. We're here to guide you every step of the way."</p>
+                <span>— Diagnova Care Team</span>
+            </div>
+        </div>
+
+        <!-- Right Side Form - Removed top bar -->
+        <div class="form-container">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger small mb-3"></div>
+
+            <form id="registerForm" method="post">
+
+                <!-- Step 1: Personal Info -->
+                <div class="form-step active-step" data-step="0">
+                    <div class="step-header">
+                        <span class="step-badge"><i class="fas fa-user-circle"></i> Step 1/5</span>
+                        <h2>Personal Information</h2>
+                        <p>Let's get to know you better</p>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label class="form-label">Full Name <span class="required">*</span></label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-user"></i>
+                                <input asp-for="Input.FullName" class="form-control" placeholder="Enter your full name" data-required="true" />
+                            </div>
+                            <span asp-validation-for="Input.FullName" class="error-message"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Username <span class="required">*</span></label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-at"></i>
+                                <input asp-for="Input.Username" class="form-control" placeholder="@@username" data-required="true" />
+                            </div>
+                            <span asp-validation-for="Input.Username" class="error-message"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email Address <span class="required">*</span></label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-envelope"></i>
+                                <input asp-for="Input.Email" class="form-control" placeholder="hello@example.com" data-required="true" />
+                            </div>
+                            <span asp-validation-for="Input.Email" class="error-message"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Date of Birth <span class="required">*</span></label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-calendar-alt"></i>
+                                <input asp-for="Input.DateOfBirth" type="date" class="form-control" data-required="true" />
+                            </div>
+                            <span asp-validation-for="Input.DateOfBirth" class="error-message"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Gender <span class="required">*</span></label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-venus-mars"></i>
+                                <select asp-for="Input.Gender" class="form-control" data-required="true">
+                                    <option value="">Select gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                    <option value="Prefer not to say">Prefer not to say</option>
+                                </select>
+                            </div>
+                            <span asp-validation-for="Input.Gender" class="error-message"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Password <span class="required">*</span></label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-lock"></i>
+                                <input asp-for="Input.Password" type="password" class="form-control" placeholder="Create a strong password" data-required="true" />
+                            </div>
+                            <span asp-validation-for="Input.Password" class="error-message"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Confirm Password <span class="required">*</span></label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-check-circle"></i>
+                                <input asp-for="Input.ConfirmPassword" type="password" class="form-control" placeholder="Confirm your password" data-required="true" />
+                            </div>
+                            <span asp-validation-for="Input.ConfirmPassword" class="error-message"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Health Metrics -->
+                <div class="form-step" data-step="1">
+                    <div class="step-header">
+                        <span class="step-badge"><i class="fas fa-heartbeat"></i> Step 2/5</span>
+                        <h2>Physical Health Metrics</h2>
+                        <p>Help us understand your body composition</p>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Weight (kg) <span class="required">*</span></label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-weight-scale"></i>
+                                <input asp-for="Input.WeightKg" type="number" step="0.1" class="form-control" id="weightInput" placeholder="68.5" data-required="true" />
+                            </div>
+                            <span asp-validation-for="Input.WeightKg" class="error-message"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Height (cm) <span class="required">*</span></label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-ruler"></i>
+                                <input asp-for="Input.HeightCm" type="number" step="0.1" class="form-control" id="heightInput" placeholder="165" data-required="true" />
+                            </div>
+                            <span asp-validation-for="Input.HeightCm" class="error-message"></span>
+                        </div>
+                        <div class="form-group full-width">
+                            <label class="form-label">BMI Preview</label>
+                            <div class="bmi-card">
+                                <div class="bmi-icon">
+                                    <i class="fas fa-calculator"></i>
+                                </div>
+                                <div class="bmi-info">
+                                    <div class="bmi-value" id="bmiValue">—</div>
+                                    <div class="bmi-category" id="bmiCategory">Enter weight and height</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Blood Type</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-tint"></i>
+                                <select asp-for="Input.BloodType" class="form-control">
+                                    <option value="">Select blood type</option>
+                                    <option value="A+">A+</option>
+                                    <option value="A-">A-</option>
+                                    <option value="B+">B+</option>
+                                    <option value="B-">B-</option>
+                                    <option value="AB+">AB+</option>
+                                    <option value="AB-">AB-</option>
+                                    <option value="O+">O+</option>
+                                    <option value="O-">O-</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Medical History -->
+                <div class="form-step" data-step="2">
+                    <div class="step-header">
+                        <span class="step-badge"><i class="fas fa-notes-medical"></i> Step 3/5</span>
+                        <h2>Medical Background</h2>
+                        <p>This information is kept strictly confidential</p>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label class="form-label">Pre-existing Conditions</label>
+                            <div class="multi-select-container" data-target="conditions">
+                                <div class="multi-select-trigger">
+                                    <i class="fas fa-notes-medical"></i>
+                                    <div class="selected-tags" id="conditionsTags"></div>
+                                    <i class="fas fa-chevron-down arrow"></i>
+                                </div>
+                                <div class="multi-select-dropdown">
+                                    <div class="dropdown-option" data-value="Diabetes">
+                                        <input type="checkbox" /> Diabetes
+                                    </div>
+                                    <div class="dropdown-option" data-value="Hypertension">
+                                        <input type="checkbox" /> Hypertension
+                                    </div>
+                                    <div class="dropdown-option" data-value="Asthma">
+                                        <input type="checkbox" /> Asthma
+                                    </div>
+                                    <div class="dropdown-option" data-value="Heart Disease">
+                                        <input type="checkbox" /> Heart Disease
+                                    </div>
+                                    <div class="dropdown-option" data-value="Arthritis">
+                                        <input type="checkbox" /> Arthritis
+                                    </div>
+                                    <div class="dropdown-option" data-value="Thyroid Disorder">
+                                        <input type="checkbox" /> Thyroid Disorder
+                                    </div>
+                                    <div class="dropdown-option" data-value="Depression">
+                                        <input type="checkbox" /> Depression
+                                    </div>
+                                    <div class="dropdown-option" data-value="Anxiety">
+                                        <input type="checkbox" /> Anxiety
+                                    </div>
+                                    <div class="custom-input-area">
+                                        <input type="text" placeholder="Add custom condition..." id="customConditionInput" />
+                                        <button type="button" onclick="addCustomCondition('conditions')">Add</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="hidden" asp-for="Input.PreExistingConditions" id="conditionsHidden" />
+                            <div class="hint-text">Select from list or type your own</div>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label class="form-label">Allergies</label>
+                            <div class="multi-select-container" data-target="allergies">
+                                <div class="multi-select-trigger">
+                                    <i class="fas fa-allergies"></i>
+                                    <div class="selected-tags" id="allergiesTags"></div>
+                                    <i class="fas fa-chevron-down arrow"></i>
+                                </div>
+                                <div class="multi-select-dropdown">
+                                    <div class="dropdown-option" data-value="Penicillin">
+                                        <input type="checkbox" /> Penicillin
+                                    </div>
+                                    <div class="dropdown-option" data-value="Sulfa Drugs">
+                                        <input type="checkbox" /> Sulfa Drugs
+                                    </div>
+                                    <div class="dropdown-option" data-value="Latex">
+                                        <input type="checkbox" /> Latex
+                                    </div>
+                                    <div class="dropdown-option" data-value="Peanuts">
+                                        <input type="checkbox" /> Peanuts
+                                    </div>
+                                    <div class="dropdown-option" data-value="Shellfish">
+                                        <input type="checkbox" /> Shellfish
+                                    </div>
+                                    <div class="dropdown-option" data-value="Dairy">
+                                        <input type="checkbox" /> Dairy
+                                    </div>
+                                    <div class="dropdown-option" data-value="Gluten">
+                                        <input type="checkbox" /> Gluten
+                                    </div>
+                                    <div class="dropdown-option" data-value="Eggs">
+                                        <input type="checkbox" /> Eggs
+                                    </div>
+                                    <div class="dropdown-option" data-value="Soy">
+                                        <input type="checkbox" /> Soy
+                                    </div>
+                                    <div class="custom-input-area">
+                                        <input type="text" placeholder="Add custom allergy..." id="customAllergyInput" />
+                                        <button type="button" onclick="addCustomCondition('allergies')">Add</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="hidden" asp-for="Input.Allergies" id="allergiesHidden" />
+                            <div class="hint-text">Select from list or type your own</div>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label class="form-label">Current Medications</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-capsules"></i>
+                                <textarea asp-for="Input.CurrentMedications" class="form-control" rows="3" placeholder="List any medications you're currently taking..."></textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Smoking Habit</label>
+                            <select asp-for="Input.SmokingHabit" class="form-control">
+                                <option value="Never">Never</option>
+                                <option value="Former">Former smoker</option>
+                                <option value="Occasional">Occasional</option>
+                                <option value="Regular">Regular</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Alcohol Habit</label>
+                            <select asp-for="Input.AlcoholHabit" class="form-control">
+                                <option value="Never">Never</option>
+                                <option value="Social">Social</option>
+                                <option value="Moderate">Moderate</option>
+                                <option value="Heavy">Heavy</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Health Goals -->
+                <div class="form-step" data-step="3">
+                    <div class="step-header">
+                        <span class="step-badge"><i class="fas fa-bullseye"></i> Step 4/5</span>
+                        <h2>Health Goals</h2>
+                        <p>Tell us what you want to achieve</p>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label class="form-label">Primary Health Goal</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-bullseye"></i>
+                                <select asp-for="Input.PrimaryGoal" class="form-control">
+                                    <option value="general wellness">General Wellness</option>
+                                    <option value="lose weight">Lose Weight</option>
+                                    <option value="gain muscle">Gain Muscle</option>
+                                    <option value="manage condition">Manage a Medical Condition</option>
+                                    <option value="improve fitness">Improve Fitness</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group full-width">
+                            <label class="form-label">Activity Level</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-heartbeat"></i>
+                                <select asp-for="Input.ActivityLevel" class="form-control">
+                                    <option value="Sedentary">Sedentary — Little to no exercise</option>
+                                    <option value="Lightly active">Lightly active — 1-3 days/week</option>
+                                    <option value="Moderately active">Moderately active — 3-5 days/week</option>
+                                    <option value="Very active">Very active — 6-7 days/week</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 5: Emergency & Security -->
+                <div class="form-step" data-step="4">
+                    <div class="step-header">
+                        <span class="step-badge"><i class="fas fa-shield-alt"></i> Step 5/5</span>
+                        <h2>Emergency & Security</h2>
+                        <p>Almost there! Add your safety information</p>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Emergency Contact Name</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-user-friends"></i>
+                                <input asp-for="Input.EmergencyContactName" class="form-control" placeholder="Full name" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Emergency Contact Phone</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-phone-alt"></i>
+                                <input asp-for="Input.EmergencyContactPhone" class="form-control" placeholder="+92 300 1234567" />
+                            </div>
+                        </div>
+                        <div class="form-group full-width">
+                            <label class="form-label">Country / Region</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-globe"></i>
+                                <input asp-for="Input.CountryRegion" class="form-control" placeholder="e.g., Pakistan, USA, UK" />
+                            </div>
+                            <div class="hint-text">Used for localized recommendations</div>
+                        </div>
+                        <div class="form-group full-width">
+                            <label class="form-label">Recovery Method</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-shield-alt"></i>
+                                <select asp-for="Input.RecoveryMethod" class="form-control" id="recoveryMethod">
+                                    <option value="email">Email OTP</option>
+                                    <option value="phone">Phone OTP</option>
+                                    <option value="question">Security Question</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group full-width security-question-area" id="securityQuestionArea">
+                            <label class="form-label">Security Question</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-question-circle"></i>
+                                <input asp-for="Input.SecurityQuestion" class="form-control" placeholder="e.g., What was your first pet's name?" />
+                            </div>
+                            <div class="form-group" style="margin-top: 0.5rem;">
+                                <label class="form-label">Security Answer</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-key"></i>
+                                    <input asp-for="Input.SecurityAnswer" class="form-control" placeholder="Your answer" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="form-navigation">
+                    <button type="button" class="btn-prev" id="prevBtn" style="display: none;">
+                        <i class="fas fa-arrow-left"></i> Previous
+                    </button>
+                    <button type="button" class="btn-next" id="nextBtn">
+                        Continue <i class="fas fa-arrow-right"></i>
+                    </button>
+                    <button type="submit" class="btn-submit" id="submitBtn" style="display: none;">
+                        Create Account <i class="fas fa-check"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentStep = 0;
+    const totalSteps = 5;
+    const forms = document.querySelectorAll('.form-step');
+    const stepItems = document.querySelectorAll('.step-item');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Multi-select logic
+    class MultiSelectManager {
+        constructor(containerId, hiddenFieldId, tagsContainerId) {
+            this.container = document.querySelector(`.multi-select-container[data-target="${containerId}"]`);
+            this.hiddenField = document.getElementById(hiddenFieldId);
+            this.tagsContainer = document.getElementById(tagsContainerId);
+            this.selectedValues = new Set();
+            
+            if (this.container) {
+                this.trigger = this.container.querySelector('.multi-select-trigger');
+                this.dropdown = this.container.querySelector('.multi-select-dropdown');
+                this.init();
+            }
+        }
+        
+        init() {
+            this.trigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.dropdown.classList.toggle('show');
+                this.trigger.classList.toggle('open');
+            });
+            
+            this.dropdown.querySelectorAll('.dropdown-option').forEach(option => {
+                const checkbox = option.querySelector('input[type="checkbox"]');
+                const value = option.dataset.value;
+                
+                option.addEventListener('click', (e) => {
+                    if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') {
+                        checkbox.checked = !checkbox.checked;
+                        if (checkbox.checked) {
+                            this.selectedValues.add(value);
+                        } else {
+                            this.selectedValues.delete(value);
+                        }
+                        this.updateDisplay();
+                    }
+                });
+                
+                checkbox.addEventListener('change', () => {
+                    if (checkbox.checked) {
+                        this.selectedValues.add(value);
+                    } else {
+                        this.selectedValues.delete(value);
+                    }
+                    this.updateDisplay();
+                });
+            });
+            
+            document.addEventListener('click', (e) => {
+                if (!this.container.contains(e.target)) {
+                    this.dropdown.classList.remove('show');
+                    this.trigger.classList.remove('open');
+                }
+            });
+        }
+        
+        addCustomValue(value) {
+            if (value && !this.selectedValues.has(value)) {
+                this.selectedValues.add(value);
+                this.updateDisplay();
+                
+                const newOption = document.createElement('div');
+                newOption.className = 'dropdown-option';
+                newOption.dataset.value = value;
+                newOption.innerHTML = `<input type="checkbox" checked /> ${value}`;
+                const customArea = this.dropdown.querySelector('.custom-input-area');
+                this.dropdown.insertBefore(newOption, customArea);
+                
+                const checkbox = newOption.querySelector('input');
+                newOption.addEventListener('click', (e) => {
+                    if (e.target.tagName !== 'INPUT') {
+                        checkbox.checked = !checkbox.checked;
+                        if (checkbox.checked) {
+                            this.selectedValues.add(value);
+                        } else {
+                            this.selectedValues.delete(value);
+                        }
+                        this.updateDisplay();
+                    }
+                });
+                checkbox.addEventListener('change', () => {
+                    if (checkbox.checked) {
+                        this.selectedValues.add(value);
+                    } else {
+                        this.selectedValues.delete(value);
+                    }
+                    this.updateDisplay();
+                });
+            }
+        }
+        
+        updateDisplay() {
+            this.tagsContainer.innerHTML = '';
+            this.selectedValues.forEach(value => {
+                const tag = document.createElement('span');
+                tag.className = 'selected-tag';
+                tag.innerHTML = `${value} <i class="fas fa-times" onclick="window.multiSelects['${this.container.dataset.target}'].removeValue('${value}')"></i>`;
+                this.tagsContainer.appendChild(tag);
+            });
+            
+            this.hiddenField.value = Array.from(this.selectedValues).join(',');
+            
+            this.dropdown.querySelectorAll('.dropdown-option').forEach(option => {
+                const checkbox = option.querySelector('input[type="checkbox"]');
+                if (checkbox && option.dataset.value) {
+                    checkbox.checked = this.selectedValues.has(option.dataset.value);
+                }
+            });
+        }
+        
+        removeValue(value) {
+            this.selectedValues.delete(value);
+            this.updateDisplay();
+        }
+    }
+    
+    window.multiSelects = {};
+    window.multiSelects['conditions'] = new MultiSelectManager('conditions', 'conditionsHidden', 'conditionsTags');
+    window.multiSelects['allergies'] = new MultiSelectManager('allergies', 'allergiesHidden', 'allergiesTags');
+    
+    function addCustomCondition(type) {
+        const input = document.getElementById(type === 'conditions' ? 'customConditionInput' : 'customAllergyInput');
+        const value = input.value.trim();
+        if (value) {
+            window.multiSelects[type].addCustomValue(value);
+            input.value = '';
+        }
+    }
+    
+    window.addCustomCondition = addCustomCondition;
+    
+    function updateUI() {
+        forms.forEach((form, idx) => form.classList.toggle('active-step', idx === currentStep));
+        
+        stepItems.forEach((item, idx) => {
+            const circle = item.querySelector('.step-number-circle');
+            if (idx < currentStep) {
+                circle.innerHTML = '<i class="fas fa-check"></i>';
+                circle.classList.add('completed');
+                circle.classList.remove('active');
+            } else if (idx === currentStep) {
+                circle.innerHTML = (idx + 1).toString();
+                circle.classList.add('active');
+                circle.classList.remove('completed');
+            } else {
+                circle.innerHTML = (idx + 1).toString();
+                circle.classList.remove('active', 'completed');
+            }
+        });
+        
+        prevBtn.style.display = currentStep === 0 ? 'none' : 'flex';
+        nextBtn.style.display = currentStep === totalSteps - 1 ? 'none' : 'flex';
+        submitBtn.style.display = currentStep === totalSteps - 1 ? 'flex' : 'none';
+        
+        document.querySelector('.form-container').scrollTop = 0;
+    }
+    
+    function validateCurrentStep() {
+        const currentForm = forms[currentStep];
+        const requiredFields = currentForm.querySelectorAll('[data-required="true"]');
+        let isValid = true;
+        
+        requiredFields.forEach(field => {
+            if (!field.value || field.value.trim() === '') {
+                field.classList.add('error');
+                isValid = false;
+            } else {
+                field.classList.remove('error');
+            }
+        });
+        
+        if (currentStep === 0) {
+            const password = document.querySelector('[name="Input.Password"]');
+            const confirmPassword = document.querySelector('[name="Input.ConfirmPassword"]');
+            if (password && confirmPassword && password.value !== confirmPassword.value) {
+                confirmPassword.classList.add('error');
+                isValid = false;
+            }
+        }
+        
+        if (!isValid) {
+            const firstError = currentForm.querySelector('.error');
+            if (firstError) firstError.focus();
+        }
+        
+        return isValid;
+    }
+    
+    // BMI Calculator
+    const weightInput = document.getElementById('weightInput');
+    const heightInput = document.getElementById('heightInput');
+    const bmiValue = document.getElementById('bmiValue');
+    const bmiCategory = document.getElementById('bmiCategory');
+    
+    function calculateBMI() {
+        const weight = parseFloat(weightInput?.value);
+        const height = parseFloat(heightInput?.value);
+        
+        if (weight && height && height > 0) {
+            const bmi = weight / ((height / 100) ** 2);
+            bmiValue.textContent = bmi.toFixed(1);
+            
+            if (bmi < 18.5) bmiCategory.textContent = 'Underweight';
+            else if (bmi < 25) bmiCategory.textContent = 'Normal weight ✓';
+            else if (bmi < 30) bmiCategory.textContent = 'Overweight';
+            else bmiCategory.textContent = 'Obese';
+        } else {
+            bmiValue.textContent = '—';
+            bmiCategory.textContent = 'Enter weight and height';
+        }
+    }
+    
+    if (weightInput && heightInput) {
+        weightInput.addEventListener('input', calculateBMI);
+        heightInput.addEventListener('input', calculateBMI);
+    }
+    
+    const recoveryMethod = document.getElementById('recoveryMethod');
+    const securityArea = document.getElementById('securityQuestionArea');
+    
+    if (recoveryMethod && securityArea) {
+        function toggleSecurityQuestion() {
+            securityArea.style.display = recoveryMethod.value === 'question' ? 'block' : 'none';
+        }
+        recoveryMethod.addEventListener('change', toggleSecurityQuestion);
+        toggleSecurityQuestion();
+    }
+    
+    nextBtn.addEventListener('click', () => {
+        if (validateCurrentStep() && currentStep < totalSteps - 1) {
+            currentStep++;
+            updateUI();
+        }
+    });
+    
+    prevBtn.addEventListener('click', () => {
+        if (currentStep > 0) {
+            currentStep--;
+            updateUI();
+        }
+    });
+    
+    document.querySelectorAll('.form-control').forEach(field => {
+        field.addEventListener('input', () => field.classList.remove('error'));
+    });
+    
+    updateUI();
+</script>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

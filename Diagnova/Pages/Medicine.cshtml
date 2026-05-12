@@ -1,0 +1,93 @@
+@page
+@model Diagnova.Pages.MedicineModel
+@{
+    ViewData["Title"] = "Medicine lookup";
+    ViewData["BodyClass"] = "dn-inner";
+}
+
+<div class="container py-4 py-md-5 dn-page-wide">
+    <header class="mb-4 pb-3 border-bottom border-opacity-10">
+        <p class="dn-page-eyebrow mb-0">OpenFDA</p>
+        <h1 class="dn-page-title mb-2">Medicine &amp; drug labels</h1>
+        <p class="dn-page-lead mb-0">
+            Search U.S. FDA structured product labels. Results are informational; always follow your clinician or pharmacist for dosing and safety.
+        </p>
+    </header>
+
+    <div class="dn-surface-card dn-surface-card-lg p-4 p-md-4 mb-4">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-lg-8">
+                <label class="form-label dn-label" for="Query">Medicine name or keyword</label>
+                <div class="input-group input-group-lg">
+                    <span class="input-group-text bg-white border-end-0 text-success">
+                        <partial name="_Icon" model='new IconModel { Id = "pill", Size = 22, CssClass = "dn-icon flex-shrink-0" }' />
+                    </span>
+                    <input class="form-control border-start-0 ps-0 rounded-end" asp-for="Query" id="Query" placeholder="e.g. aspirin, acetaminophen, ibuprofen" autocomplete="off" />
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <button type="submit" class="btn dn-btn-success btn-lg w-100 rounded-3 fw-semibold">Search labels</button>
+            </div>
+        </form>
+        <p class="small text-muted mb-0 mt-3">
+            Data from OpenFDA; not every product worldwide appears here. Spelling and generic names work best.
+        </p>
+    </div>
+
+    @if (Model.Searched && Model.Result is null)
+    {
+        <div class="alert border-0 rounded-3 shadow-sm mb-0" style="background: #fff8e6; color: #664d03; border-left: 4px solid #ffc107 !important;">
+            <strong>No match.</strong> Try another spelling, active ingredient, or brand name.
+        </div>
+    }
+
+    @if (Model.Result is not null)
+    {
+        <article class="dn-surface-card dn-surface-card-lg overflow-hidden">
+            <div class="px-4 py-3 border-bottom" style="background: linear-gradient(90deg, var(--dn-green-soft), transparent);">
+                <h2 class="h4 mb-1 fw-bold">@(!string.IsNullOrEmpty(Model.Result.BrandName) ? Model.Result.BrandName : "Drug label")</h2>
+                @if (!string.IsNullOrEmpty(Model.Result.GenericName))
+                {
+                    <p class="text-muted small mb-0"><span class="fw-semibold text-dark">Generic:</span> @Model.Result.GenericName</p>
+                }
+            </div>
+            <div class="p-4 p-md-5">
+                @if (!string.IsNullOrEmpty(Model.Result.Purpose))
+                {
+                    <section class="mb-4 pb-4 border-bottom border-opacity-10">
+                        <h3 class="h6 text-uppercase fw-bold text-success mb-2" style="letter-spacing: 0.08em;">Purpose / indications</h3>
+                        <p class="small mb-0" style="white-space: pre-wrap; line-height: 1.65;">@Model.Result.Purpose</p>
+                    </section>
+                }
+                @if (!string.IsNullOrEmpty(Model.Result.DosageAndAdministration))
+                {
+                    <section class="mb-4 pb-4 border-bottom border-opacity-10">
+                        <h3 class="h6 text-uppercase fw-bold text-success mb-2" style="letter-spacing: 0.08em;">Dosage &amp; administration</h3>
+                        <p class="small mb-0" style="white-space: pre-wrap; line-height: 1.65;">@Model.Result.DosageAndAdministration</p>
+                    </section>
+                }
+                @if (!string.IsNullOrEmpty(Model.Result.Warnings))
+                {
+                    <section class="mb-4 pb-4 border-bottom border-opacity-10">
+                        <h3 class="h6 text-uppercase fw-bold text-danger mb-2" style="letter-spacing: 0.08em;">Warnings</h3>
+                        <p class="small mb-0" style="white-space: pre-wrap; line-height: 1.65;">@Model.Result.Warnings</p>
+                    </section>
+                }
+                @if (!string.IsNullOrEmpty(Model.Result.AdverseReactions))
+                {
+                    <section class="mb-4 pb-4 border-bottom border-opacity-10">
+                        <h3 class="h6 text-uppercase fw-bold text-secondary mb-2" style="letter-spacing: 0.08em;">Adverse reactions</h3>
+                        <p class="small mb-0" style="white-space: pre-wrap; line-height: 1.65;">@Model.Result.AdverseReactions</p>
+                    </section>
+                }
+                @if (!string.IsNullOrEmpty(Model.Result.Contraindications))
+                {
+                    <section class="mb-0">
+                        <h3 class="h6 text-uppercase fw-bold text-secondary mb-2" style="letter-spacing: 0.08em;">Contraindications</h3>
+                        <p class="small mb-0" style="white-space: pre-wrap; line-height: 1.65;">@Model.Result.Contraindications</p>
+                    </section>
+                }
+            </div>
+        </article>
+    }
+</div>

@@ -1,0 +1,68 @@
+@page
+@model Diagnova.Pages.HistoryModel
+@{
+    ViewData["Title"] = "Patient history";
+    ViewData["BodyClass"] = "dn-inner";
+}
+
+<div class="container py-4 py-md-5 dn-page-wide">
+    <header class="mb-4 d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
+        <div>
+            <p class="dn-page-eyebrow mb-0">Your account</p>
+            <h1 class="dn-page-title mb-2">Chat history</h1>
+            <p class="dn-page-lead mb-0">Sessions are stored for your login. Open the assistant to continue an active thread.</p>
+        </div>
+        <a class="btn dn-btn-outline-success rounded-pill px-4 fw-semibold flex-shrink-0" asp-page="/Chat">
+            <partial name="_Icon" model='new IconModel { Id = "chat", Size = 18, CssClass = "dn-icon me-1" }' /> Open assistant
+        </a>
+    </header>
+
+    @if (Model.Sessions.Count == 0)
+    {
+        <div class="dn-empty-state">
+            <div class="dn-mascot mx-auto mb-3" style="width:4rem;height:4rem;margin-top:0;">
+                <partial name="_Icon" model='new IconModel { Id = "clipboard", Size = 34, CssClass = "dn-icon text-success" }' />
+            </div>
+            <p class="fw-semibold text-dark mb-1">No sessions yet</p>
+            <p class="small mb-3">Start a conversation in the symptom assistant — it will appear here.</p>
+            <a class="btn dn-btn-success rounded-pill px-4" asp-page="/Chat">Start symptom chat</a>
+        </div>
+    }
+    else
+    {
+        <div class="dn-table-wrap">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Started</th>
+                        <th>Status</th>
+                        <th>Messages</th>
+                        <th class="pe-4 text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var s in Model.Sessions)
+                {
+                    <tr>
+                        <td class="ps-4">@s.StartedAt.LocalDateTime.ToString("g")</td>
+                        <td>
+                            @if (s.ClosedAt.HasValue)
+                            {
+                                <span class="badge rounded-pill text-bg-secondary">Closed</span>
+                            }
+                            else
+                            {
+                                <span class="badge rounded-pill text-bg-success">Active</span>
+                            }
+                        </td>
+                        <td class="fw-semibold">@s.MessageCount</td>
+                        <td class="pe-4 text-end">
+                            <a class="btn btn-sm dn-btn-outline-success rounded-pill px-3" asp-page="/Chat">Continue</a>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

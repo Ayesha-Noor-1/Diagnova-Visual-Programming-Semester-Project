@@ -1,0 +1,47 @@
+﻿@page
+@model ErrorModel
+@{
+    ViewData["Title"] = "Something went wrong";
+    ViewData["BodyClass"] = "dn-inner";
+}
+
+<div class="container py-5 dn-page" style="max-width: 36rem;">
+    <div class="text-center mb-4">
+        <div class="dn-mascot mx-auto mb-3" style="width:4.5rem;height:4.5rem;margin-top:0;background:#fdecea;">
+            <span class="fs-2" role="img" aria-hidden="true">⚠️</span>
+        </div>
+        <h1 class="dn-page-title mb-2">We hit a snag</h1>
+        <p class="text-muted mb-0">The request could not be completed. If this keeps happening, try again later or contact the administrator.</p>
+    </div>
+
+    <div class="dn-surface-card dn-surface-card-lg p-4">
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <p class="small fw-semibold text-secondary mb-1">What went wrong</p>
+            <p class="small text-muted mb-0 text-break">@Model.ErrorMessage</p>
+            @if (Model.ShowRequestId)
+            {
+                <hr class="my-3 opacity-25" />
+            }
+        }
+        @if (Model.ShowRequestId)
+        {
+            <p class="small text-muted mb-2"><span class="fw-semibold text-dark">Request ID</span> (include in bug reports):</p>
+            <code class="d-block small p-2 rounded-2 bg-light text-break mb-0">@Model.RequestId</code>
+        }
+
+        @if (Model.ShowDevDetails)
+        {
+            <hr class="my-4 opacity-25" />
+            <p class="small fw-semibold text-danger mb-2">Development — exception detail</p>
+            <pre class="small bg-light border rounded-3 p-3 text-danger text-wrap mb-0" style="max-height: 280px; overflow: auto;">@Model.ExceptionDetail</pre>
+            <p class="small text-muted mt-3 mb-0">
+                The Development environment should not be enabled in production deployments.
+            </p>
+        }
+    </div>
+
+    <div class="text-center mt-4">
+        <a class="btn dn-btn-success rounded-pill px-4 fw-semibold" asp-page="/Index">Back to home</a>
+    </div>
+</div>

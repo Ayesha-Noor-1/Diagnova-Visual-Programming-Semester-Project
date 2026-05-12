@@ -1,0 +1,132 @@
+@page
+@model Diagnova.Pages.VitalsModel
+@{
+    ViewData["Title"] = "Vitals";
+    ViewData["BodyClass"] = "dn-inner";
+}
+
+<div class="container py-4 py-md-5 dn-page-wide">
+    <header class="mb-4">
+        <p class="dn-page-eyebrow mb-0">Health log</p>
+        <h1 class="dn-page-title mb-2">Vitals tracker</h1>
+        <p class="dn-page-lead mb-0">
+            Record blood pressure, glucose, temperature, and optional notes. Trends appear below after you save a few readings.
+        </p>
+    </header>
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div asp-validation-summary="All" class="alert alert-danger border-0 rounded-3 shadow-sm mb-4" role="alert"></div>
+    }
+
+    <div class="dn-surface-card dn-surface-card-lg p-4 p-md-4 mb-4">
+        <h2 class="h6 fw-bold mb-3">New reading</h2>
+        <form method="post" class="row g-3">
+            <div class="col-sm-6 col-lg-3">
+                <label class="form-label dn-label" asp-for="Input.SystolicMmHg">Systolic (mmHg)</label>
+                <input class="form-control form-control-lg rounded-3" asp-for="Input.SystolicMmHg" placeholder="120" />
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <label class="form-label dn-label" asp-for="Input.DiastolicMmHg">Diastolic (mmHg)</label>
+                <input class="form-control form-control-lg rounded-3" asp-for="Input.DiastolicMmHg" placeholder="80" />
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <label class="form-label dn-label" asp-for="Input.BloodSugarMgDl">Glucose (mg/dL)</label>
+                <input class="form-control form-control-lg rounded-3" asp-for="Input.BloodSugarMgDl" />
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <label class="form-label dn-label" asp-for="Input.TemperatureC">Temp (°C)</label>
+                <input class="form-control form-control-lg rounded-3" asp-for="Input.TemperatureC" step="0.1" />
+            </div>
+            <div class="col-12">
+                <label class="form-label dn-label" asp-for="Input.Notes">Notes <span class="fw-normal opacity-75">(optional)</span></label>
+                <input class="form-control rounded-3" asp-for="Input.Notes" placeholder="e.g. before breakfast, after walk" />
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn dn-btn-success rounded-pill px-4 fw-semibold">Save reading</button>
+            </div>
+        </form>
+    </div>
+
+    <h2 class="h5 fw-bold mb-3">Recent readings</h2>
+    @if (Model.Recent.Count == 0)
+    {
+        <div class="dn-empty-state">
+            <div class="dn-mascot mx-auto mb-3" style="width:4rem;height:4rem;margin-top:0;">
+                <partial name="_Icon" model='new IconModel { Id = "chart", Size = 36, CssClass = "dn-icon text-success" }' />
+            </div>
+            <p class="fw-semibold text-dark mb-1">No readings yet</p>
+            <p class="small mb-0">Add your first numbers above — they will show in the table and chart.</p>
+        </div>
+    }
+    else
+    {
+        <div class="dn-table-wrap mb-4">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">When</th>
+                        <th>BP</th>
+                        <th>Glucose</th>
+                        <th>Temp °C</th>
+                        <th class="pe-4">Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var v in Model.Recent)
+                {
+                    <tr>
+                        <td class="ps-4 small">@v.RecordedAt.LocalDateTime.ToString("g")</td>
+                        <td><span class="fw-semibold">@(v.SystolicMmHg?.ToString() ?? "—")</span><span class="text-muted">/</span><span class="fw-semibold">@(v.DiastolicMmHg?.ToString() ?? "—")</span></td>
+                        <td>@(v.BloodSugarMgDl?.ToString() ?? "—")</td>
+                        <td>@(v.TemperatureC?.ToString() ?? "—")</td>
+                        <td class="pe-4 small text-muted">@v.Notes</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="dn-chart-card">
+            <p class="small fw-semibold text-muted text-uppercase mb-2" style="letter-spacing:0.06em;">Trends</p>
+            <canvas id="vitalsChart" height="110"></canvas>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    @if (Model.Recent.Count > 0)
+    {
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+        <script>
+            const rows = @Html.Raw(Model.ChartJson);
+            const labels = rows.map(r => r.t);
+            const bp = rows.map(r => r.bpSys);
+            const glu = rows.map(r => r.glucose);
+            const brandGreen = '#198754';
+            const brandDark = '#146c43';
+
+            const ctx = document.getElementById('vitalsChart');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        { label: 'Systolic BP', data: bp, borderColor: brandDark, backgroundColor: 'rgba(20, 108, 67, 0.06)', fill: true, tension: 0.25, spanGaps: true },
+                        { label: 'Glucose', data: glu, borderColor: brandGreen, backgroundColor: 'rgba(25, 135, 84, 0.06)', fill: true, tension: 0.25, spanGaps: true, yAxisID: 'y1' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16 } } },
+                    scales: {
+                        y: { beginAtZero: false, grid: { color: 'rgba(0,0,0,0.06)' }, title: { display: true, text: 'BP (mmHg)', font: { size: 11 } } },
+                        y1: { position: 'right', beginAtZero: false, grid: { drawOnChartArea: false }, title: { display: true, text: 'Glucose (mg/dL)', font: { size: 11 } } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        </script>
+    }
+}
