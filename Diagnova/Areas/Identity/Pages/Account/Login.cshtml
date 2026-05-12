@@ -107,7 +107,7 @@
         position: relative;
     }
 
-        .input-wrapper i {
+        .input-wrapper i:first-child {
             position: absolute;
             left: 14px;
             top: 50%;
@@ -118,9 +118,26 @@
             transition: color 0.2s;
         }
 
+    /* Password toggle button */
+    .password-toggle {
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #9bb3a7;
+        font-size: 0.9rem;
+        z-index: 1;
+        transition: color 0.2s;
+    }
+
+        .password-toggle:hover {
+            color: #1a5c3e;
+        }
+
     .form-control {
         width: 100%;
-        padding: 0.75rem 1rem 0.75rem 2.5rem;
+        padding: 0.75rem 2.5rem 0.75rem 2.5rem;
         border: 1.5px solid #e0e8e3;
         border-radius: 12px;
         font-size: 0.9rem;
@@ -140,7 +157,7 @@
             background: white;
         }
 
-    .input-wrapper:focus-within i {
+    .input-wrapper:focus-within i:first-child {
         color: #1a5c3e;
     }
 
@@ -354,7 +371,8 @@
                     <label asp-for="Input.Password" class="form-label">Password</label>
                     <div class="input-wrapper">
                         <i class="fas fa-lock"></i>
-                        <input asp-for="Input.Password" type="password" class="form-control" autocomplete="current-password" placeholder="••••••••" />
+                        <input asp-for="Input.Password" type="password" class="form-control" id="password" autocomplete="current-password" placeholder="••••••••" />
+                        <i class="fas fa-eye-slash password-toggle" id="togglePassword"></i>
                     </div>
                     <span asp-validation-for="Input.Password" class="text-danger small"></span>
                 </div>
@@ -412,6 +430,24 @@
         </div>
     </div>
 </div>
+
+<script>
+    // Password toggle functionality
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+
+    if (togglePassword && passwordInput) {
+        togglePassword.addEventListener('click', function() {
+            // Toggle the type attribute
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            // Toggle the icon
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+    }
+</script>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

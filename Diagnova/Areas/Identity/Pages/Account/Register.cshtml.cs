@@ -109,8 +109,9 @@ public class RegisterModel : PageModel
         [Display(Name = "Emergency contact name")]
         public string? EmergencyContactName { get; set; }
 
-        [Display(Name = "Emergency contact phone")]
-        public string? EmergencyContactPhone { get; set; }
+        [EmailAddress]
+        [Display(Name = "Emergency contact email")]
+        public string? EmergencyContactEmail { get; set; }  // Changed from Phone to Email
 
         [Display(Name = "Country / region")]
         public string? CountryRegion { get; set; }
@@ -179,7 +180,7 @@ public class RegisterModel : PageModel
                     ActivityLevel = Input.ActivityLevel,
                     DailyCalorieTarget = Input.DailyCalorieTarget,
                     EmergencyContactName = Input.EmergencyContactName ?? string.Empty,
-                    EmergencyContactPhone = Input.EmergencyContactPhone ?? string.Empty,
+                    EmergencyContactPhone = Input.EmergencyContactEmail ?? string.Empty,
                     CountryRegion = Input.CountryRegion ?? string.Empty,
                     RecoveryMethod = Input.RecoveryMethod,
                     SecurityQuestion = Input.SecurityQuestion,
