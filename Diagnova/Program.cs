@@ -41,6 +41,10 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
     WebRootPath = webRoot,
 });
 
+// Default host loads user secrets only in Development; VS/IIS profiles sometimes omit that.
+// Always merge secrets from this assembly (same UserSecretsId as `dotnet user-secrets`) so OpenAI:ApiKey is found.
+builder.Configuration.AddUserSecrets(typeof(AppDbContext).Assembly, optional: true);
+
 // Lets MapStaticAssets / library bundles resolve when not running from `dotnet publish` output (e.g. Production env + dotnet run).
 builder.WebHost.UseStaticWebAssets();
 

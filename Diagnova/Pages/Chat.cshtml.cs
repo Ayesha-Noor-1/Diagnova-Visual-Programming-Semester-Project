@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text;
 using Diagnova.Models;
 using Diagnova.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -81,7 +82,12 @@ public class ChatModel : PageModel
         }
         else
         {
-            var assistant = await _ai.GetAssistantReplyAsync(priorTurns, text, HttpContext.RequestAborted);
+            var profile = await _mongoDb.MedicalProfiles
+                .Find(p => p.UserId == userId)
+                .FirstOrDefaultAsync();
+            var profileContext = BuildPatientProfileContext(profile);
+
+            var assistant = await _ai.GetAssistantReplyAsync(priorTurns, text, profileContext, HttpContext.RequestAborted);
             await _mongoDb.ChatMessages.InsertOneAsync(new MongoChatMessage
             {
                 SessionId = session.Id!,
@@ -147,6 +153,35 @@ public class ChatModel : PageModel
         open = new MongoChatSession { UserId = userId };
         await _mongoDb.ChatSessions.InsertOneAsync(open);
         return open;
+    }
+
+    /// <summary>Formats MongoDB medical profile for the model (no email/phone/security fields).</summary>
+    private static string? BuildPatientProfileContext(MedicalProfile? profile)
+    {
+        if (profile is null)
+            return null;
+
+        var sb = new StringBuilder();
+        sb.AppendLine($"- **Name:** {profile.FullName}");
+        sb.AppendLine($"- **Age:** {profile.Age} (from profile date of birth)");
+        sb.AppendLine($"- **Gender:** {profile.Gender}");
+        if (profile.WeightKg > 0 && profile.HeightCm > 0)
+            sb.AppendLine($"- **Weight / height:** {profile.WeightKg} kg, {profile.HeightCm} cm (BMI {profile.BMI})");
+        if (!string.IsNullOrWhiteSpace(profile.BloodType))
+            sb.AppendLine($"- **Blood type:** {profile.BloodType}");
+        if (!string.IsNullOrWhiteSpace(profile.CurrentMedications))
+            sb.AppendLine($"- **Current medications (self-reported):** {profile.CurrentMedications}");
+        else
+            sb.AppendLine("- **Current medications (self-reported):** *none listed in profile*");
+        if (profile.PreExistingConditions.Count > 0)
+            sb.AppendLine($"- **Pre-existing conditions:** {string.Join(", ", profile.PreExistingConditions)}");
+        if (profile.Allergies.Count > 0)
+            sb.AppendLine($"- **Allergies:** {string.Join(", ", profile.Allergies)}");
+        sb.AppendLine($"- **Smoking:** {profile.SmokingHabit} · **Alcohol:** {profile.AlcoholHabit}");
+        sb.AppendLine($"- **Activity level:** {profile.ActivityLevel}");
+        if (!string.IsNullOrWhiteSpace(profile.PrimaryGoal))
+            sb.AppendLine($"- **Health goal:** {profile.PrimaryGoal}");
+        return sb.ToString().TrimEnd();
     }
 
     private static string BuildEmergencyReply(IReadOnlyList<string> keywords)

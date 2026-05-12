@@ -17,6 +17,9 @@ obj/
 ## Secrets
 appsettings.*.local.json
 **/secrets.json
+Diagnova/appsettings.json
+Diagnova/appsettings.Development.json
+*.Backup.tmp
 
 ## OS
 Thumbs.db

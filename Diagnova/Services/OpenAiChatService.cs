@@ -16,15 +16,23 @@ public sealed class OpenAiChatService : IOpenAiChatService
         _options = options.Value;
         _logger = logger;
 
-        _http.BaseAddress = new Uri("https://api.openai.com/v1/");
+        var baseUrl = string.IsNullOrWhiteSpace(_options.BaseUrl)
+            ? "https://api.openai.com/v1/"
+            : _options.BaseUrl.Trim().TrimEnd('/') + "/";
+        _http.BaseAddress = new Uri(baseUrl, UriKind.Absolute);
         _http.Timeout = TimeSpan.FromMinutes(2);
         if (!string.IsNullOrWhiteSpace(_options.ApiKey))
             _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _options.ApiKey.Trim());
+        if (!string.IsNullOrWhiteSpace(_options.Referer))
+            _http.DefaultRequestHeaders.TryAddWithoutValidation("HTTP-Referer", _options.Referer.Trim());
+        if (!string.IsNullOrWhiteSpace(_options.SiteTitle))
+            _http.DefaultRequestHeaders.TryAddWithoutValidation("X-Title", _options.SiteTitle.Trim());
     }
 
     public async Task<string> GetAssistantReplyAsync(
         IReadOnlyList<ChatTurn> priorTurns,
         string userMessage,
+        string? patientProfileContext = null,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(_options.ApiKey))
@@ -36,9 +44,21 @@ public sealed class OpenAiChatService : IOpenAiChatService
                 """;
         }
 
+        var systemContent = string.IsNullOrWhiteSpace(patientProfileContext)
+            ? MedicalSystemPrompt
+            : $"""
+                {MedicalSystemPrompt}
+
+                ## Self-reported patient profile (from this user's Diagnova account)
+
+                {patientProfileContext.Trim()}
+
+                Use this when the user asks about their own medications, conditions, or background. It is self-reported and may be outdated — remind them to confirm with a clinician or pharmacist when discussing specific drugs or doses.
+                """;
+
         var messages = new List<object>
         {
-            new { role = "system", content = MedicalSystemPrompt },
+            new { role = "system", content = systemContent },
         };
 
         foreach (var t in priorTurns)
@@ -100,5 +120,6 @@ public sealed class OpenAiChatService : IOpenAiChatService
         - Ask clarifying questions when needed.
 
         Never claim certainty. Never prescribe medications or doses.
+        When the patient profile lists medications, you may summarize or discuss interactions at a high level, but do not invent doses or tell the user to start/stop a drug.
         """;
 }
