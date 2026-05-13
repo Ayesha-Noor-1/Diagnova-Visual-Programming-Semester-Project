@@ -32,6 +32,11 @@ public class ChatModel : PageModel
 
     public IReadOnlyList<string> EmergencyKeywords { get; private set; } = Array.Empty<string>();
 
+    /// <summary>AI explanation when alarming due to profile + symptoms (not keyword-only).</summary>
+    public string? AlarmingReason { get; set; }
+
+    public string? SpecialistHint { get; set; }
+
     public async Task OnGet()
     {
         await LoadAsync();
@@ -66,10 +71,31 @@ public class ChatModel : PageModel
             Content = text,
         });
 
+        var profile = await _mongoDb.MedicalProfiles
+            .Find(p => p.UserId == userId)
+            .FirstOrDefaultAsync();
+        var profileContext = BuildPatientProfileContext(profile);
+
         var scan = _emergency.Scan(text);
-        if (scan.IsEmergency)
+        var alarming = scan.IsEmergency;
+        var keywords = scan.MatchedKeywords.ToList();
+        string? alarmingReason = null;
+        string? specialistHint = null;
+
+        if (!alarming)
         {
-            var reply = BuildEmergencyReply(scan.MatchedKeywords);
+            var classification = await _ai.ClassifyAlarmingAsync(text, profileContext, HttpContext.RequestAborted);
+            if (classification?.IsAlarming == true)
+            {
+                alarming = true;
+                alarmingReason = classification.Reason;
+                specialistHint = classification.SpecialistHint;
+            }
+        }
+
+        if (alarming)
+        {
+            var reply = BuildEmergencyReply(keywords, alarmingReason, specialistHint);
             await _mongoDb.ChatMessages.InsertOneAsync(new MongoChatMessage
             {
                 SessionId = session.Id!,
@@ -78,15 +104,12 @@ public class ChatModel : PageModel
             });
 
             ShowEmergencyModal = true;
-            EmergencyKeywords = scan.MatchedKeywords;
+            EmergencyKeywords = keywords;
+            AlarmingReason = alarmingReason;
+            SpecialistHint = specialistHint;
         }
         else
         {
-            var profile = await _mongoDb.MedicalProfiles
-                .Find(p => p.UserId == userId)
-                .FirstOrDefaultAsync();
-            var profileContext = BuildPatientProfileContext(profile);
-
             var assistant = await _ai.GetAssistantReplyAsync(priorTurns, text, profileContext, HttpContext.RequestAborted);
             await _mongoDb.ChatMessages.InsertOneAsync(new MongoChatMessage
             {
@@ -99,6 +122,68 @@ public class ChatModel : PageModel
         UserInput = string.Empty;
         await LoadAsync();
         return Page();
+    }
+
+    public async Task<IActionResult> OnPostEmergencyPlacesAsync(double lat, double lng)
+    {
+        try
+        {
+            if (lat is < -90 or > 90 || lng is < -180 or > 180)
+                return new JsonResult(new { ok = false, error = "Invalid coordinates." });
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return new JsonResult(new { ok = false, error = "Not signed in." });
+
+            var session = await _mongoDb.ChatSessions
+                .Find(s => s.UserId == userId && s.ClosedAt == null)
+                .SortByDescending(s => s.StartedAt)
+                .FirstOrDefaultAsync();
+
+            if (session?.Id == null)
+                return new JsonResult(new { ok = false, error = "No active chat session." });
+
+            var recent = await _mongoDb.ChatMessages
+                .Find(m => m.SessionId == session.Id)
+                .SortByDescending(m => m.CreatedAt)
+                .Limit(40)
+                .ToListAsync();
+
+            var lastUser = recent.FirstOrDefault(m => string.Equals(m.Role, "user", StringComparison.OrdinalIgnoreCase));
+            if (lastUser is null || string.IsNullOrWhiteSpace(lastUser.Content))
+                return new JsonResult(new { ok = false, error = "No recent user message found." });
+
+            var profile = await _mongoDb.MedicalProfiles
+                .Find(p => p.UserId == userId)
+                .FirstOrDefaultAsync();
+            var profileContext = BuildPatientProfileContext(profile);
+
+            var facilities = await _ai.SuggestEmergencyFacilitiesAsync(
+                lat,
+                lng,
+                lastUser.Content,
+                profileContext,
+                HttpContext.RequestAborted);
+
+            return new JsonResult(new
+            {
+                ok = true,
+                patient = new { lat, lng },
+                facilities = facilities.Select(f => new
+                {
+                    f.Name,
+                    f.Address,
+                    f.Latitude,
+                    f.Longitude,
+                    f.DistanceKm,
+                    f.Notes,
+                }),
+            });
+        }
+        catch (Exception ex)
+        {
+            return new JsonResult(new { ok = false, error = "Server error while loading places. " + ex.Message });
+        }
     }
 
     public async Task<IActionResult> OnPostNewChatAsync()
@@ -181,23 +266,43 @@ public class ChatModel : PageModel
         sb.AppendLine($"- **Activity level:** {profile.ActivityLevel}");
         if (!string.IsNullOrWhiteSpace(profile.PrimaryGoal))
             sb.AppendLine($"- **Health goal:** {profile.PrimaryGoal}");
+        if (!string.IsNullOrWhiteSpace(profile.CountryRegion))
+            sb.AppendLine($"- **Country / region:** {profile.CountryRegion}");
         return sb.ToString().TrimEnd();
     }
 
-    private static string BuildEmergencyReply(IReadOnlyList<string> keywords)
+    private static string BuildEmergencyReply(
+        IReadOnlyList<string> keywords,
+        string? profileAlarmingReason,
+        string? specialistHint)
     {
-        var kw = string.Join(", ", keywords);
-        return $"""
-            ## Emergency guidance
+        var sb = new StringBuilder();
+        sb.AppendLine("## Alarming situation");
+        sb.AppendLine();
+        if (!string.IsNullOrWhiteSpace(profileAlarmingReason))
+            sb.AppendLine(profileAlarmingReason);
+        else
+            sb.AppendLine("Your message matches phrases that can indicate an **urgent** medical situation.");
 
-            Your message matched urgent keywords: **{kw}**.
+        if (keywords.Count > 0)
+        {
+            sb.AppendLine();
+            sb.AppendLine($"**Matched urgent phrases:** {string.Join(", ", keywords)}.");
+        }
 
-            **Call emergency services immediately** if you are in danger or symptoms are severe.
+        sb.AppendLine();
+        if (!string.IsNullOrWhiteSpace(specialistHint))
+            sb.AppendLine($"**Care routing:** Go to the **nearest emergency department now**. When you speak with triage, mention you may need **{specialistHint}** follow-up after stabilization.");
+        else
+            sb.AppendLine("**Care routing:** Go to the **nearest emergency department** or call emergency services **now**.");
 
-            **Pakistan helplines (examples):** **1122** (Rescue / emergency services), **115** (Edhi Ambulance), **1166** (health helpline). Use the official local number for your city if different.
-
-            Diagnova is not a substitute for emergency care. If in doubt, seek urgent medical attention or go to the nearest emergency department.
-            """;
+        sb.AppendLine();
+        sb.AppendLine("**Call emergency services immediately** if you are in danger, feel faint, have trouble breathing, or symptoms are severe.");
+        sb.AppendLine();
+        sb.AppendLine("**Pakistan helplines (examples):** **1122** (Rescue / emergency services), **115** (Edhi Ambulance), **1166** (health helpline). Use the official local number for your city if different.");
+        sb.AppendLine();
+        sb.AppendLine("Diagnova is not a substitute for emergency care. In the popup you can share your **approximate location** to see **AI-suggested** nearby facilities on a map — **verify by phone or official maps** before traveling.");
+        return sb.ToString().TrimEnd();
     }
 }
 

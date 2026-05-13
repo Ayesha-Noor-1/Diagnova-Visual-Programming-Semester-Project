@@ -77,13 +77,66 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, NoOpIdentityEmailSender>();
 
 builder.Services.AddRazorPages();
+builder.Services.AddAntiforgery(options =>
+{
+    options.HeaderName = "RequestVerificationToken";
+});
 
 builder.Services.Configure<OpenAiOptions>(builder.Configuration.GetSection(OpenAiOptions.SectionName));
+builder.Services.PostConfigure<OpenAiOptions>(o =>
+{
+    if (!string.IsNullOrEmpty(o.ApiKey))
+        o.ApiKey = o.ApiKey.Trim();
+    if (!string.IsNullOrEmpty(o.BaseUrl))
+        o.BaseUrl = o.BaseUrl.Trim();
+    if (!string.IsNullOrEmpty(o.Model))
+        o.Model = o.Model.Trim();
+    if (!string.IsNullOrEmpty(o.EmergencyRoutingModel))
+        o.EmergencyRoutingModel = o.EmergencyRoutingModel.Trim();
+});
 builder.Services.AddHttpClient<IOpenAiChatService, OpenAiChatService>();
 builder.Services.AddHttpClient<IOpenFdaService, OpenFdaService>();
 builder.Services.AddSingleton<IEmergencyDetectorService, EmergencyDetectorService>();
 
 var app = builder.Build();
+
+{
+    var open = app.Configuration.GetSection(OpenAiOptions.SectionName);
+    var hasKey = !string.IsNullOrWhiteSpace(open["ApiKey"]);
+    var baseUrl = string.IsNullOrWhiteSpace(open["BaseUrl"]) ? "(default https://api.openai.com/v1/)" : open["BaseUrl"]!;
+    var model = string.IsNullOrWhiteSpace(open["Model"]) ? "(default)" : open["Model"]!;
+    var route = string.IsNullOrWhiteSpace(open["EmergencyRoutingModel"]) ? "(same as Model)" : open["EmergencyRoutingModel"]!;
+    app.Logger.LogInformation(
+        "OpenAI config: ApiKey configured={HasKey}; BaseUrl={Base}; Model={Model}; EmergencyRoutingModel={Route}",
+        hasKey, baseUrl, model, route);
+
+    static bool LooksLikeUrlInsteadOfModel(string? m)
+    {
+        if (string.IsNullOrWhiteSpace(m)) return false;
+        m = m.Trim();
+        if (m.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || m.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (m.Equals("api/v1", StringComparison.OrdinalIgnoreCase) || m.Equals("v1", StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (m.Contains("openrouter.ai", StringComparison.OrdinalIgnoreCase))
+            return true;
+        return m.Contains("/api/", StringComparison.Ordinal);
+    }
+
+    if (LooksLikeUrlInsteadOfModel(open["Model"]))
+    {
+        app.Logger.LogWarning(
+            "OpenAI:Model is {Model} — this looks like a URL fragment, not a model id. Set OpenAI:BaseUrl to your API root (e.g. https://openrouter.ai/api/v1/) and OpenAI:Model to a slug from https://openrouter.ai/models (e.g. openai/gpt-4o-mini).",
+            open["Model"]);
+    }
+
+    if (LooksLikeUrlInsteadOfModel(open["EmergencyRoutingModel"]))
+    {
+        app.Logger.LogWarning(
+            "OpenAI:EmergencyRoutingModel is {Model} — use a real model slug, not a URL. See https://openrouter.ai/models",
+            open["EmergencyRoutingModel"]);
+    }
+}
 
 if (app.Environment.IsDevelopment())
 {
