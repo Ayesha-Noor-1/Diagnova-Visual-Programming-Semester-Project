@@ -32,9 +32,18 @@ public class ChatModel : PageModel
 
     public IReadOnlyList<string> EmergencyKeywords { get; private set; } = Array.Empty<string>();
 
+    public string? CurrentSessionId { get; private set; }
+
     public async Task OnGet()
     {
         await LoadAsync();
+    }
+
+    // Handler for partial view loading (for SPA dashboard)
+    public async Task<IActionResult> OnGetPartialAsync()
+    {
+        await LoadAsync();
+        return Partial("_ChatPartial", this);
     }
 
     public async Task<IActionResult> OnPostAsync()
@@ -130,9 +139,11 @@ public class ChatModel : PageModel
         if (session == null || session.Id == null)
         {
             Messages = Array.Empty<ChatLineVm>();
+            CurrentSessionId = null;
             return;
         }
 
+        CurrentSessionId = session.Id;
         var messages = await _mongoDb.ChatMessages
             .Find(m => m.SessionId == session.Id)
             .SortBy(m => m.CreatedAt)

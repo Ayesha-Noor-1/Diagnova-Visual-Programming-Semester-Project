@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Diagnova.Models;
 using Diagnova.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -17,50 +18,87 @@ public class DashboardModel : PageModel
     }
 
     public string? LatestAssistantSummary { get; private set; }
-
     public VitalReadingVm? LatestVitals { get; private set; }
-
     public long ChatSessionCount { get; private set; }
+    public string? UserName { get; private set; }
+    public int ThisWeekChats { get; private set; }
+    public int VitalsCount { get; private set; }
+    public int StreakDays { get; private set; }
+    public List<ChatSessionSummary> RecentChatSessions { get; private set; } = new();
+    public MedicalProfile? UserProfile { get; private set; }
 
     public async Task OnGetAsync()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        UserName = User.Identity?.Name ?? "User";
 
-        // Get latest assistant message
-        var latestMessages = await _mongoDb.ChatMessages
-            .Find(m => m.Role == "assistant")
-            .SortByDescending(m => m.CreatedAt)
-            .Limit(1)
+        // Get user profile
+        UserProfile = await _mongoDb.MedicalProfiles.Find(p => p.UserId == userId).FirstOrDefaultAsync();
+
+        // Get chat sessions
+        var allSessions = await _mongoDb.ChatSessions
+            .Find(s => s.UserId == userId)
+            .SortByDescending(s => s.StartedAt)
             .ToListAsync();
 
-        if (latestMessages.Any())
+        ChatSessionCount = allSessions.Count;
+
+        // Calculate this week's chats
+        var startOfWeek = DateTimeOffset.UtcNow.AddDays(-7);
+        ThisWeekChats = allSessions.Count(s => s.StartedAt >= startOfWeek);
+
+        // Get recent sessions for display
+        RecentChatSessions = new List<ChatSessionSummary>();
+        foreach (var session in allSessions.Take(10))
         {
-            LatestAssistantSummary = latestMessages.First().Content;
-            if (!string.IsNullOrEmpty(LatestAssistantSummary) && LatestAssistantSummary.Length > 280)
-                LatestAssistantSummary = LatestAssistantSummary[..280].TrimEnd() + "…";
+            var messages = await _mongoDb.ChatMessages
+                .Find(m => m.SessionId == session.Id)
+                .SortBy(m => m.CreatedAt)
+                .ToListAsync();
+
+            var firstUserMessage = messages.FirstOrDefault(m => m.Role == "user");
+            var title = firstUserMessage != null
+                ? (firstUserMessage.Content.Length > 40
+                    ? firstUserMessage.Content.Substring(0, 40) + "..."
+                    : firstUserMessage.Content)
+                : "New Conversation";
+
+            RecentChatSessions.Add(new ChatSessionSummary
+            {
+                Id = session.Id ?? string.Empty,
+                StartedAt = session.StartedAt,
+                Title = title,
+                MessageCount = messages.Count
+            });
         }
 
-        // Get latest vitals
-        var latestVitals = await _mongoDb.VitalReadings
-            .Find(v => v.UserId == userId)
-            .SortByDescending(v => v.RecordedAt)
-            .FirstOrDefaultAsync();
+        // Get vitals count
+        VitalsCount = (int)await _mongoDb.VitalReadings.Find(v => v.UserId == userId).CountDocumentsAsync();
 
-        if (latestVitals != null)
+        // Calculate streak
+        var last7Days = new List<DateTimeOffset>();
+        for (int i = 0; i < 7; i++)
+            last7Days.Add(DateTimeOffset.UtcNow.AddDays(-i).Date);
+
+        var chatDates = allSessions.Select(s => s.StartedAt.Date).Distinct().ToList();
+        var streak = 0;
+        foreach (var day in last7Days)
         {
-            LatestVitals = new VitalReadingVm(
-                latestVitals.RecordedAt,
-                latestVitals.SystolicMmHg,
-                latestVitals.DiastolicMmHg,
-                latestVitals.BloodSugarMgDl,
-                latestVitals.TemperatureC);
+            if (chatDates.Contains(day.Date))
+                streak++;
+            else
+                break;
         }
-
-        // Count chat sessions
-        ChatSessionCount = await _mongoDb.ChatSessions
-            .Find(s => s.UserId == userId)
-            .CountDocumentsAsync();
+        StreakDays = streak;
     }
+}
+
+public class ChatSessionSummary
+{
+    public string Id { get; set; } = string.Empty;
+    public DateTimeOffset StartedAt { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public int MessageCount { get; set; }
 }
 
 public sealed record VitalReadingVm(

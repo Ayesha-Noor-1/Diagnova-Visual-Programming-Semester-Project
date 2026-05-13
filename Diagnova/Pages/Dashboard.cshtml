@@ -2,87 +2,674 @@
 @model Diagnova.Pages.DashboardModel
 @{
     ViewData["Title"] = "Dashboard";
-    ViewData["BodyClass"] = "dn-inner";
+    Layout = null;
 }
 
-<div class="container py-4 py-md-5 dn-page-wide">
-    <header class="text-center mb-4 pb-2">
-        <p class="dn-page-eyebrow mb-0">Overview</p>
-        <h1 class="dn-page-title mb-2">Health dashboard</h1>
-        <p class="dn-page-lead mx-auto mb-0">Latest assistant insight, vitals snapshot, and quick links to every tool.</p>
-    </header>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnova - Health Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="card h-100 shadow-sm border-0 rounded-4 bg-gradient-diagnova text-white">
-                <div class="card-body p-4">
-                    <h2 class="h6 text-uppercase opacity-75 mb-2">Latest insight</h2>
-                    @if (string.IsNullOrWhiteSpace(Model.LatestAssistantSummary))
-                    {
-                        <p class="mb-0 small">No assistant replies yet. Open the symptom assistant to begin.</p>
-                    }
-                    else
-                    {
-                        <p class="mb-0 small" style="white-space: pre-wrap;">@Model.LatestAssistantSummary</p>
-                    }
-                    <a class="btn btn-light btn-sm mt-3 rounded-pill fw-semibold text-success" asp-page="/Chat">Open assistant</a>
-                </div>
+        :root {
+            --primary-green: #0f5c3b;
+            --primary-green-light: #1a7a4c;
+            --primary-green-soft: #e6f4ea;
+            --primary-green-bg: #f0f9f3;
+            --text-dark: #1e2a32;
+            --text-muted: #5a6e7a;
+            --text-light: #8ba0ab;
+            --border-light: #e8edf0;
+            --bg-gray: #f7f9fb;
+            --bg-white: #ffffff;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.1);
+            --sidebar-width: 280px;
+            --gradient-primary: linear-gradient(135deg, #0f5c3b 0%, #1a7a4c 100%);
+            --gradient-welcome: linear-gradient(135deg, #0f5c3b 0%, #259e5a 100%);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-gray);
+            overflow: hidden;
+        }
+
+        .dashboard-container {
+            display: flex;
+            height: 100vh;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-white);
+            border-right: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 100;
+            overflow-y: auto;
+            box-shadow: var(--shadow-md);
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar-header {
+            padding: 1.8rem 1.5rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            background: var(--gradient-primary);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.3rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .logo-text {
+            font-size: 1.4rem;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-menu {
+            flex: 1;
+            padding: 1.8rem 1.2rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.85rem 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 14px;
+            transition: all 0.2s ease;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .nav-item:hover {
+            background: var(--primary-green-soft);
+            color: var(--primary-green);
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .nav-item i {
+            width: 22px;
+            font-size: 1.1rem;
+        }
+
+        .user-section {
+            padding: 1.2rem 1.2rem 1.8rem;
+            border-top: 1px solid var(--border-light);
+            margin-top: auto;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            padding: 0.75rem;
+            border-radius: 14px;
+            margin-bottom: 0.75rem;
+            background: var(--bg-gray);
+        }
+
+        .user-avatar {
+            width: 44px;
+            height: 44px;
+            background: var(--gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .user-details {
+            flex: 1;
+        }
+
+        .user-name {
+            font-weight: 700;
+            color: var(--text-dark);
+            font-size: 0.9rem;
+        }
+
+        .user-email {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            color: #dc3545;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            border: none;
+            background: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .logout-btn:hover {
+            background: #ffe5e5;
+            transform: translateX(4px);
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            overflow-y: auto;
+            padding: 2rem;
+            background: var(--bg-gray);
+        }
+
+        #dynamicContent {
+            animation: fadeIn 0.3s ease;
+        }
+
+        @@keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .welcome-hero {
+            background: var(--gradient-welcome);
+            border-radius: 28px;
+            padding: 2rem 2.5rem;
+            margin-bottom: 2rem;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .welcome-hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 300px;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 50%;
+        }
+
+        .welcome-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .greeting {
+            font-size: 0.9rem;
+            font-weight: 500;
+            opacity: 0.9;
+        }
+
+        .user-greeting-name {
+            font-size: 2rem;
+            font-weight: 800;
+            margin: 0.5rem 0 0.25rem;
+        }
+
+        .welcome-message {
+            font-size: 0.9rem;
+            opacity: 0.85;
+            margin-bottom: 1.5rem;
+        }
+
+        .health-stats {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 0.8rem 1.5rem;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            opacity: 0.8;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.2rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-box {
+            background: var(--bg-white);
+            border-radius: 20px;
+            padding: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-light);
+        }
+
+        .stat-box:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--primary-green-soft);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--primary-green);
+        }
+
+        .stat-info h3 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--text-dark);
+        }
+
+        .stat-info p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .chat-history-container {
+            background: var(--bg-white);
+            border-radius: 24px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .chat-history-header {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .chat-history-header h2 {
+            font-size: 1.5rem;
+            color: var(--text-dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .chat-history-header p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .session-list-full {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .session-item-full {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: var(--bg-gray);
+            border-radius: 14px;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+
+        .session-item-full:hover {
+            background: var(--primary-green-soft);
+            border-color: var(--primary-green-light);
+            transform: translateX(4px);
+        }
+
+        .session-info-full {
+            flex: 1;
+        }
+
+        .session-title-full {
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .session-date-full {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .session-badge-full {
+            background: var(--primary-green-soft);
+            color: var(--primary-green);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .artifacts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        .artifact-card {
+            background: var(--bg-white);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .artifact-card .card-header {
+            background: var(--primary-green-soft);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .artifact-card .card-header i {
+            font-size: 1.2rem;
+            color: var(--primary-green);
+        }
+
+        .artifact-card .card-header h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .artifact-card .card-body {
+            padding: 1.5rem;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .info-label {
+            font-weight: 500;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .info-value {
+            color: var(--text-dark);
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .badge-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .badge {
+            background: var(--primary-green-soft);
+            color: var(--primary-green);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+        }
+
+        @@media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .stats-grid, .artifacts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <div class="logo-icon">D</div>
+                <span class="logo-text">Diagnova</span>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card h-100 shadow-sm border-0 rounded-4">
-                <div class="card-body p-4">
-                    <h2 class="h6 text-muted text-uppercase mb-2">Latest vitals</h2>
-                    @if (Model.LatestVitals is null)
-                    {
-                        <p class="mb-0 text-muted small">No vitals logged yet.</p>
-                    }
-                    else
-                    {
-                        <ul class="list-unstyled small mb-0">
-                            <li><strong>Recorded:</strong> @Model.LatestVitals.RecordedAt.LocalDateTime.ToString("g")</li>
-                            @if (Model.LatestVitals.SystolicMmHg.HasValue || Model.LatestVitals.DiastolicMmHg.HasValue)
-                            {
-                                <li><strong>BP:</strong> @(Model.LatestVitals.SystolicMmHg?.ToString() ?? "—")/@(Model.LatestVitals.DiastolicMmHg?.ToString() ?? "—") mmHg</li>
-                            }
-                            @if (Model.LatestVitals.BloodSugarMgDl.HasValue)
-                            {
-                                <li><strong>Glucose:</strong> @Model.LatestVitals.BloodSugarMgDl mg/dL</li>
-                            }
-                            @if (Model.LatestVitals.TemperatureC.HasValue)
-                            {
-                                <li><strong>Temp:</strong> @Model.LatestVitals.TemperatureC °C</li>
-                            }
-                        </ul>
-                    }
-                    <a class="btn dn-btn-outline-success btn-sm mt-3 rounded-pill" asp-page="/Vitals">Log vitals</a>
-                </div>
+
+        <div class="nav-menu">
+            <div class="nav-item active" data-page="dashboard">
+                <i class="fas fa-chart-line"></i>
+                <span>Dashboard</span>
+            </div>
+            <div class="nav-item" data-page="newchat">
+                <i class="fas fa-comment-dots"></i>
+                <span>New Chat</span>
+            </div>
+            <div class="nav-item" data-page="chathistory">
+                <i class="fas fa-history"></i>
+                <span>Chat History</span>
+            </div>
+            <div class="nav-item" data-page="artifacts">
+                <i class="fas fa-database"></i>
+                <span>Artifacts</span>
+            </div>
+            <div class="nav-item" data-page="medicine">
+                <i class="fas fa-capsules"></i>
+                <span>Medicine</span>
+            </div>
+            <div class="nav-item" data-page="nearby">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>Nearby Care</span>
+            </div>
+            <div class="nav-item" data-page="vitals">
+                <i class="fas fa-heartbeat"></i>
+                <span>Vitals</span>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card h-100 shadow-sm border-0 rounded-4">
-                <div class="card-body p-4">
-                    <h2 class="h6 text-muted text-uppercase mb-2">History</h2>
-                    <p class="display-6 mb-0 text-success">@Model.ChatSessionCount</p>
-                    <p class="text-muted small mb-3">chat sessions stored</p>
-                    <a class="btn dn-btn-outline-success btn-sm rounded-pill" asp-page="/History">View history</a>
+
+        <div class="user-section">
+            <div class="user-info">
+                <div class="user-avatar">@(Model.UserName?.Substring(0, 1).ToUpper() ?? "U")</div>
+                <div class="user-details">
+                    <div class="user-name">@Model.UserName</div>
+                    <div class="user-email">@User.Identity?.Name</div>
                 </div>
             </div>
+            <form asp-area="Identity" asp-page="/Account/Logout" method="post">
+                <button type="submit" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </form>
         </div>
     </div>
 
-    <div class="row g-3">
-        <div class="col-6 col-md-3">
-            <a class="btn dn-btn-outline-success w-100 py-3 rounded-4 fw-semibold" asp-page="/Chat">Assistant</a>
-        </div>
-        <div class="col-6 col-md-3">
-            <a class="btn dn-btn-outline-success w-100 py-3 rounded-4 fw-semibold" asp-page="/Medicine">Medicine</a>
-        </div>
-        <div class="col-6 col-md-3">
-            <a class="btn dn-btn-outline-success w-100 py-3 rounded-4 fw-semibold" asp-page="/Nearby">Nearby care</a>
-        </div>
-        <div class="col-6 col-md-3">
-            <a class="btn dn-btn-outline-success w-100 py-3 rounded-4 fw-semibold" asp-page="/Vitals">Vitals</a>
-        </div>
+    <div class="main-content">
+        <div id="dynamicContent"></div>
     </div>
 </div>
+
+<script>
+    const initialData = {
+        userName: '@Model.UserName',
+        chatSessionCount: @Model.ChatSessionCount,
+        thisWeekChats: @Model.ThisWeekChats,
+        vitalsCount: @Model.VitalsCount,
+        streakDays: @Model.StreakDays,
+        recentSessions: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.RecentChatSessions)),
+        userProfile: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.UserProfile))
+    };
+
+    function loadDashboard() {
+        const html = `
+            <div class="welcome-hero">
+                <div class="welcome-content">
+                    <div class="greeting">👋 Welcome back,</div>
+                    <div class="user-greeting-name">${initialData.userName}!</div>
+                    <div class="welcome-message">Your health journey continues. Here's your health at a glance.</div>
+                    <div class="health-stats">
+                        <div class="stat-card"><div class="stat-number">${initialData.chatSessionCount}</div><div class="stat-label">Total Chats</div></div>
+                        <div class="stat-card"><div class="stat-number">${initialData.thisWeekChats}</div><div class="stat-label">This Week</div></div>
+                        <div class="stat-card"><div class="stat-number">${initialData.vitalsCount}</div><div class="stat-label">Vitals Logged</div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-box"><div class="stat-icon"><i class="fas fa-comments"></i></div><div class="stat-info"><h3>${initialData.chatSessionCount}</h3><p>Total Conversations</p></div></div>
+                <div class="stat-box"><div class="stat-icon"><i class="fas fa-calendar-week"></i></div><div class="stat-info"><h3>${initialData.thisWeekChats}</h3><p>Chats This Week</p></div></div>
+                <div class="stat-box"><div class="stat-icon"><i class="fas fa-heart"></i></div><div class="stat-info"><h3>${initialData.vitalsCount}</h3><p>Vitals Recorded</p></div></div>
+                <div class="stat-box"><div class="stat-icon"><i class="fas fa-trophy"></i></div><div class="stat-info"><h3>${initialData.streakDays}</h3><p>Day Streak</p></div></div>
+            </div>
+        `;
+        document.getElementById('dynamicContent').innerHTML = html;
+    }
+
+    async function loadNewChat() {
+        const response = await fetch('/Chat');
+        const html = await response.text();
+        document.getElementById('dynamicContent').innerHTML = html;
+    }
+
+    function loadChatHistory() {
+        let sessionsHtml = '';
+        if (initialData.recentSessions && initialData.recentSessions.length > 0) {
+            sessionsHtml = initialData.recentSessions.map(session => `
+                <div class="session-item-full" onclick="window.location.href='/Chat?sessionId=${session.id}'">
+                    <div class="session-info-full">
+                        <div class="session-title-full">${escapeHtml(session.title)}</div>
+                        <div class="session-date-full">${new Date(session.startedAt).toLocaleString()}</div>
+                    </div>
+                    <div class="session-badge-full">${session.messageCount} msgs</div>
+                </div>
+            `).join('');
+        } else {
+            sessionsHtml = '<div style="text-align: center; padding: 2rem;"><i class="fas fa-comment-slash" style="font-size: 3rem; opacity: 0.3;"></i><p style="margin-top: 1rem;">No conversations yet</p></div>';
+        }
+        const html = `<div class="chat-history-container"><div class="chat-history-header"><h2><i class="fas fa-history"></i> Chat History</h2><p>All your conversations with Diagnova AI assistant</p></div><div class="session-list-full">${sessionsHtml}</div></div>`;
+        document.getElementById('dynamicContent').innerHTML = html;
+    }
+
+    async function loadArtifacts() {
+        const response = await fetch('/Artifacts');
+        const html = await response.text();
+        document.getElementById('dynamicContent').innerHTML = html;
+    }
+
+    async function loadMedicine() {
+        const response = await fetch('/Medicine');
+        const html = await response.text();
+        document.getElementById('dynamicContent').innerHTML = html;
+    }
+
+    async function loadNearby() {
+        const response = await fetch('/Nearby');
+        const html = await response.text();
+        document.getElementById('dynamicContent').innerHTML = html;
+    }
+
+    async function loadVitals() {
+        const response = await fetch('/Vitals');
+        const html = await response.text();
+        document.getElementById('dynamicContent').innerHTML = html;
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            item.classList.add('active');
+            const page = item.dataset.page;
+            switch(page) {
+                case 'dashboard': loadDashboard(); break;
+                case 'newchat': loadNewChat(); break;
+                case 'chathistory': loadChatHistory(); break;
+                case 'artifacts': loadArtifacts(); break;
+                case 'medicine': loadMedicine(); break;
+                case 'nearby': loadNearby(); break;
+                case 'vitals': loadVitals(); break;
+            }
+        });
+    });
+
+    loadDashboard();
+</script>
+</body>
+</html>
