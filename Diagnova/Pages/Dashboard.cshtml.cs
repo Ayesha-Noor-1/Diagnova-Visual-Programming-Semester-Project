@@ -4,6 +4,8 @@ using Diagnova.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using MongoDB.Driver;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Diagnova.Pages;
 
@@ -24,16 +26,30 @@ public class DashboardModel : PageModel
     public int ThisWeekChats { get; private set; }
     public int VitalsCount { get; private set; }
     public int StreakDays { get; private set; }
+    public int MedicinesCount { get; set; }
     public List<ChatSessionSummary> RecentChatSessions { get; private set; } = new();
     public MedicalProfile? UserProfile { get; private set; }
+    public List<VitalDisplay> RecentVitals { get; set; } = new();
+
+    // Serialized profile for JavaScript
+    public string UserProfileJson { get; private set; } = "{}";
 
     public async Task OnGetAsync()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         UserName = User.Identity?.Name ?? "User";
 
-        // Get user profile
+        // Get user profile from MongoDB
         UserProfile = await _mongoDb.MedicalProfiles.Find(p => p.UserId == userId).FirstOrDefaultAsync();
+
+        // Serialize profile for JavaScript with proper date handling
+        var options = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            Converters = { new JsonStringEnumConverter() }
+        };
+        UserProfileJson = JsonSerializer.Serialize(UserProfile, options);
 
         // Get chat sessions
         var allSessions = await _mongoDb.ChatSessions
@@ -75,6 +91,9 @@ public class DashboardModel : PageModel
         // Get vitals count
         VitalsCount = (int)await _mongoDb.VitalReadings.Find(v => v.UserId == userId).CountDocumentsAsync();
 
+        // Get medicines count from search history
+        MedicinesCount = (int)await _mongoDb.MedicineSearchHistory.Find(m => m.UserId == userId).CountDocumentsAsync();
+
         // Calculate streak
         var last7Days = new List<DateTimeOffset>();
         for (int i = 0; i < 7; i++)
@@ -107,3 +126,18 @@ public sealed record VitalReadingVm(
     int? DiastolicMmHg,
     double? BloodSugarMgDl,
     double? TemperatureC);
+
+public class VitalDisplay
+{
+    public string Id { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string Unit { get; set; } = string.Empty;
+    public List<ReadingDisplay> Readings { get; set; } = new();
+}
+
+public class ReadingDisplay
+{
+    public double Value { get; set; }
+    public string? Note { get; set; }
+    public DateTime RecordedAt { get; set; }
+}

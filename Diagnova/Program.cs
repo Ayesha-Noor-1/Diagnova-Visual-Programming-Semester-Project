@@ -3,6 +3,8 @@ using Diagnova.Models;
 using Diagnova.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
+using MongoDB.Driver;
 
 // When the working directory or base path is bin/Debug/net10.0, ASP.NET looks for wwwroot there and fails.
 // Walk up until we find a directory that contains wwwroot (project folder when developing, or publish output).
@@ -161,6 +163,65 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// API endpoints for Vitals
+app.MapGet("/api/vitals", async (MongoDbService mongoDb, ClaimsPrincipal user) =>
+{
+    var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+    if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+
+    var vitals = await mongoDb.VitalDefinitions.Find(v => v.UserId == userId).ToListAsync();
+    return Results.Ok(vitals);
+}).RequireAuthorization();
+
+app.MapPost("/api/vitals", async (MongoDbService mongoDb, ClaimsPrincipal user, CreateVitalRequest request) =>
+{
+    var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+    if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+
+    var vital = new VitalDefinition
+    {
+        UserId = userId,
+        Name = request.Name,
+        Unit = request.Unit,
+        Readings = new List<VitalReadingEntry>()
+    };
+    await mongoDb.VitalDefinitions.InsertOneAsync(vital);
+    return Results.Ok(vital);
+}).RequireAuthorization();
+
+app.MapPost("/api/vitals/reading", async (MongoDbService mongoDb, ClaimsPrincipal user, AddReadingRequest request) =>
+{
+    var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+    if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+
+    var vital = await mongoDb.VitalDefinitions.Find(v => v.Id == request.VitalId && v.UserId == userId).FirstOrDefaultAsync();
+    if (vital == null) return Results.NotFound();
+
+    vital.Readings ??= new List<VitalReadingEntry>();
+    vital.Readings.Add(new VitalReadingEntry
+    {
+        Value = request.Value,
+        Note = request.Note,
+        RecordedAt = DateTime.UtcNow
+    });
+    await mongoDb.VitalDefinitions.ReplaceOneAsync(v => v.Id == vital.Id, vital);
+    return Results.Ok(vital);
+}).RequireAuthorization();
+
+// API endpoint for medicine search history
+app.MapGet("/api/medicine/history", async (MongoDbService mongoDb, ClaimsPrincipal user) =>
+{
+    var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+    if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+
+    var history = await mongoDb.MedicineSearchHistory
+        .Find(h => h.UserId == userId)
+        .SortByDescending(h => h.SearchedAt)
+        .Limit(20)
+        .ToListAsync();
+    return Results.Ok(history);
+}).RequireAuthorization();
+
 app.MapStaticAssets();
 app.MapRazorPages()
     .WithStaticAssets();
@@ -173,3 +234,88 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
+
+// API endpoint for updating profile
+app.MapPost("/api/profile/update", async (MongoDbService mongoDb, ClaimsPrincipal user, UpdateProfileRequest request) =>
+{
+    var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+    if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+
+    var profile = await mongoDb.MedicalProfiles.Find(p => p.UserId == userId).FirstOrDefaultAsync();
+    if (profile == null) return Results.NotFound();
+
+    // Update the specified field
+    switch (request.Field?.ToLower())
+    {
+        case "fullname":
+            profile.FullName = request.Value ?? string.Empty;
+            break;
+        case "username":
+            profile.Username = request.Value ?? string.Empty;
+            break;
+        case "email":
+            profile.Email = request.Value ?? string.Empty;
+            break;
+        case "gender":
+            profile.Gender = request.Value ?? string.Empty;
+            break;
+        case "weightkg":
+            if (double.TryParse(request.Value, out var weight))
+                profile.WeightKg = weight;
+            break;
+        case "heightcm":
+            if (double.TryParse(request.Value, out var height))
+                profile.HeightCm = height;
+            break;
+        case "bloodtype":
+            profile.BloodType = request.Value ?? string.Empty;
+            break;
+        case "currentmedications":
+            profile.CurrentMedications = request.Value ?? string.Empty;
+            break;
+        case "smokinghabit":
+            profile.SmokingHabit = request.Value ?? "Never";
+            break;
+        case "alcoholhabit":
+            profile.AlcoholHabit = request.Value ?? "Never";
+            break;
+        case "primarygoal":
+            profile.PrimaryGoal = request.Value ?? string.Empty;
+            break;
+        case "activitylevel":
+            profile.ActivityLevel = request.Value ?? "Sedentary";
+            break;
+        case "dailycalorietarget":
+            if (int.TryParse(request.Value, out var calories))
+                profile.DailyCalorieTarget = calories;
+            break;
+        case "countryregion":
+            profile.CountryRegion = request.Value ?? string.Empty;
+            break;
+        case "emergencycontactname":
+            profile.EmergencyContactName = request.Value ?? string.Empty;
+            break;
+        case "emergencycontactphone":
+            profile.EmergencyContactPhone = request.Value ?? string.Empty;
+            break;
+        case "preExistingConditions":
+            // Handle comma-separated list
+            profile.PreExistingConditions = request.Value?.Split(',').Select(s => s.Trim()).ToList() ?? new List<string>();
+            break;
+        case "allergies":
+            profile.Allergies = request.Value?.Split(',').Select(s => s.Trim()).ToList() ?? new List<string>();
+            break;
+    }
+
+    profile.UpdatedAt = DateTime.UtcNow;
+    await mongoDb.MedicalProfiles.ReplaceOneAsync(p => p.Id == profile.Id, profile);
+
+    return Results.Ok(new { success = true });
+}).RequireAuthorization();
+
+public record UpdateProfileRequest(string Field, string? Value);
+
+// Request/Record types for API endpoints
+public record CreateVitalRequest(string Name, string Unit);
+public record AddReadingRequest(string VitalId, double Value, string? Note);
+

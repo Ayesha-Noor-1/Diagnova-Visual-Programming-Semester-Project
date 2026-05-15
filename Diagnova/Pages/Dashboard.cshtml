@@ -37,7 +37,7 @@
             --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.1);
             --sidebar-width: 280px;
             --gradient-primary: linear-gradient(135deg, #0f5c3b 0%, #1a7a4c 100%);
-            --gradient-welcome: linear-gradient(135deg, #0f5c3b 0%, #259e5a 100%);
+            --gradient-header: linear-gradient(90deg, #0f5c3b 0%, #2d8b5a 100%);
         }
 
         body {
@@ -53,6 +53,7 @@
             overflow: hidden;
         }
 
+        /* Sidebar Styles */
         .sidebar {
             width: var(--sidebar-width);
             background: var(--bg-white);
@@ -66,6 +67,7 @@
             z-index: 100;
             overflow-y: auto;
             box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
         }
 
         .sidebar::-webkit-scrollbar {
@@ -109,7 +111,7 @@
 
         .nav-menu {
             flex: 1;
-            padding: 1.8rem 1.2rem;
+            padding: 1.5rem 1rem;
         }
 
         .nav-item {
@@ -117,8 +119,8 @@
             align-items: center;
             gap: 1rem;
             padding: 0.85rem 1rem;
-            margin-bottom: 0.5rem;
-            border-radius: 14px;
+            margin-bottom: 0.25rem;
+            border-radius: 12px;
             transition: all 0.2s ease;
             color: var(--text-muted);
             font-weight: 500;
@@ -129,7 +131,6 @@
         .nav-item:hover {
             background: var(--primary-green-soft);
             color: var(--primary-green);
-            transform: translateX(4px);
         }
 
         .nav-item.active {
@@ -143,8 +144,61 @@
             font-size: 1.1rem;
         }
 
+        .nav-item.has-dropdown {
+            position: relative;
+        }
+
+        .dropdown-chevron {
+            margin-left: auto;
+            font-size: 0.75rem;
+            transition: transform 0.2s;
+        }
+
+        .nav-item.has-dropdown.active .dropdown-chevron {
+            transform: rotate(90deg);
+        }
+
+        .sub-nav {
+            margin-left: 2rem;
+            margin-top: 0.25rem;
+            margin-bottom: 0.25rem;
+            display: none;
+        }
+
+        .sub-nav.show {
+            display: block;
+        }
+
+        .sub-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.6rem 1rem;
+            border-radius: 10px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sub-nav-item:hover {
+            background: var(--primary-green-soft);
+            color: var(--primary-green);
+        }
+
+        .sub-nav-item.active {
+            background: var(--primary-green-soft);
+            color: var(--primary-green);
+            font-weight: 500;
+        }
+
+        .sub-nav-item i {
+            width: 18px;
+            font-size: 0.85rem;
+        }
+
         .user-section {
-            padding: 1.2rem 1.2rem 1.8rem;
+            padding: 1.2rem 1rem 1.5rem;
             border-top: 1px solid var(--border-light);
             margin-top: auto;
         }
@@ -206,9 +260,9 @@
 
         .logout-btn:hover {
             background: #ffe5e5;
-            transform: translateX(4px);
         }
 
+        /* Main Content */
         .main-content {
             flex: 1;
             margin-left: var(--sidebar-width);
@@ -226,8 +280,9 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* Dashboard Stats */
         .welcome-hero {
-            background: var(--gradient-welcome);
+            background: var(--gradient-header);
             border-radius: 28px;
             padding: 2rem 2.5rem;
             margin-bottom: 2rem;
@@ -235,22 +290,6 @@
             position: relative;
             overflow: hidden;
             box-shadow: var(--shadow-lg);
-        }
-
-        .welcome-hero::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -10%;
-            width: 300px;
-            height: 300px;
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 50%;
-        }
-
-        .welcome-content {
-            position: relative;
-            z-index: 1;
         }
 
         .greeting {
@@ -269,29 +308,6 @@
             font-size: 0.9rem;
             opacity: 0.85;
             margin-bottom: 1.5rem;
-        }
-
-        .health-stats {
-            display: flex;
-            gap: 1.5rem;
-            flex-wrap: wrap;
-        }
-
-        .stat-card {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 0.8rem 1.5rem;
-        }
-
-        .stat-number {
-            font-size: 1.5rem;
-            font-weight: 800;
-        }
-
-        .stat-label {
-            font-size: 0.7rem;
-            opacity: 0.8;
         }
 
         .stats-grid {
@@ -341,28 +357,82 @@
             color: var(--text-muted);
         }
 
+        /* Chat Styles */
+        .chat-container {
+            background: var(--bg-white);
+            border-radius: 24px;
+            height: calc(100vh - 120px);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-bubble {
+            max-width: 70%;
+            padding: 0.75rem 1rem;
+            border-radius: 20px;
+            background: var(--bg-gray);
+        }
+
+        .message.user .message-bubble {
+            background: var(--gradient-primary);
+            color: white;
+        }
+
+        .message-role {
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            opacity: 0.7;
+        }
+
+        .chat-input-area {
+            padding: 1rem;
+            border-top: 1px solid var(--border-light);
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .chat-input-area textarea {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid var(--border-light);
+            border-radius: 24px;
+            resize: none;
+            font-family: inherit;
+        }
+
+        .chat-input-area button {
+            background: var(--gradient-primary);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 24px;
+            color: white;
+            cursor: pointer;
+        }
+
+        /* Chat History Styles */
         .chat-history-container {
             background: var(--bg-white);
             border-radius: 24px;
             padding: 1.5rem;
             box-shadow: var(--shadow-sm);
-        }
-
-        .chat-history-header {
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border-light);
-        }
-
-        .chat-history-header h2 {
-            font-size: 1.5rem;
-            color: var(--text-dark);
-            margin-bottom: 0.25rem;
-        }
-
-        .chat-history-header p {
-            color: var(--text-muted);
-            font-size: 0.85rem;
         }
 
         .session-list-full {
@@ -386,7 +456,6 @@
         .session-item-full:hover {
             background: var(--primary-green-soft);
             border-color: var(--primary-green-light);
-            transform: translateX(4px);
         }
 
         .session-info-full {
@@ -414,6 +483,38 @@
             font-weight: 600;
         }
 
+        /* Artifacts Styles */
+        .artifacts-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .artifacts-header h2 {
+            font-size: 1.5rem;
+            color: var(--text-dark);
+        }
+
+        .edit-toggle-btn {
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .edit-toggle-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
         .artifacts-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -425,6 +526,12 @@
             border-radius: 20px;
             overflow: hidden;
             box-shadow: var(--shadow-sm);
+            transition: all 0.2s;
+        }
+
+        .artifact-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
 
         .artifact-card .card-header {
@@ -458,6 +565,11 @@
             border-bottom: 1px solid var(--border-light);
         }
 
+        .info-row.editing {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
         .info-label {
             font-weight: 500;
             color: var(--text-muted);
@@ -468,6 +580,42 @@
             color: var(--text-dark);
             font-size: 0.85rem;
             font-weight: 500;
+        }
+
+        .info-value-edit {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .info-value-edit input {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            font-size: 0.85rem;
+        }
+
+        .info-value-edit button {
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .info-value-edit button:hover {
+            background: var(--primary-green-light);
+        }
+
+        .alert-info {
+            background: #e6f4ea;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            color: var(--primary-green);
         }
 
         .badge-list {
@@ -484,15 +632,390 @@
             font-size: 0.7rem;
         }
 
+        /* Medicine Search Styles */
+        .medicine-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .medicine-header {
+            background: var(--gradient-header);
+            border-radius: 24px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            color: white;
+        }
+
+        .medicine-header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .medicine-header p {
+            opacity: 0.85;
+            font-size: 0.9rem;
+        }
+
+        .feature-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .feature-card {
+            background: var(--bg-white);
+            border-radius: 20px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-light);
+        }
+
+        .feature-card i {
+            font-size: 2rem;
+            color: var(--primary-green);
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h4 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+        }
+
+        .feature-card p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .medicine-search-bar {
+            position: sticky;
+            bottom: 0;
+            background: var(--bg-white);
+            padding: 1rem;
+            border-radius: 60px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .medicine-search-bar input {
+            flex: 1;
+            padding: 0.8rem 1.2rem;
+            border: 1.5px solid var(--border-light);
+            border-radius: 40px;
+            font-size: 0.9rem;
+            font-family: inherit;
+        }
+
+        .medicine-search-bar input:focus {
+            outline: none;
+            border-color: var(--primary-green);
+        }
+
+        .medicine-search-bar button {
+            background: var(--gradient-primary);
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 40px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .medicine-search-bar button:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .result-card {
+            background: var(--bg-white);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow-sm);
+            border-left: 4px solid var(--primary-green);
+        }
+
+        .result-card h3 {
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .warnings-badge {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 0.5rem;
+        }
+
+        .search-history-list {
+            background: var(--bg-white);
+            border-radius: 20px;
+            padding: 1.5rem;
+        }
+
+        .history-item {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-light);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .history-item:hover {
+            background: var(--primary-green-soft);
+            border-radius: 12px;
+        }
+
+        /* Vitals Styles */
+        .vitals-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .vitals-header h2 {
+            font-size: 1.5rem;
+            color: var(--text-dark);
+        }
+
+        .create-vital-btn {
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            border-radius: 40px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .create-vital-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .vitals-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .vital-card {
+            background: var(--bg-white);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .vital-card-header {
+            background: #e8f5ee;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .vital-card-header h3 {
+            font-size: 1.1rem;
+            color: var(--text-dark);
+        }
+
+        .latest-reading {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-green);
+        }
+
+        .latest-reading small {
+            font-size: 0.7rem;
+            font-weight: normal;
+            color: var(--text-muted);
+        }
+
+        .vital-card-body {
+            padding: 1.5rem;
+        }
+
+        .sparkline-container {
+            margin: 1rem 0;
+            padding: 0.5rem;
+            background: var(--bg-gray);
+            border-radius: 12px;
+        }
+
+        .readings-log {
+            max-height: 200px;
+            overflow-y: auto;
+            margin: 1rem 0;
+        }
+
+        .reading-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 0.85rem;
+        }
+
+        .reading-date {
+            color: var(--text-muted);
+        }
+
+        .add-reading-btn {
+            background: #0d5c3a;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .add-reading-btn:hover {
+            background: #0a4a2e;
+        }
+
+        .inline-add-form {
+            margin-top: 1rem;
+            display: none;
+            gap: 0.5rem;
+            flex-direction: column;
+        }
+
+        .inline-add-form.show {
+            display: flex;
+        }
+
+        .inline-add-form input {
+            padding: 0.5rem;
+            border: 1px solid var(--border-light);
+            border-radius: 30px;
+        }
+
+        .inline-add-form button {
+            background: var(--primary-green);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 30px;
+            color: white;
+            cursor: pointer;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 24px;
+            padding: 2rem;
+            width: 400px;
+            max-width: 90%;
+        }
+
+        .modal-content h3 {
+            margin-bottom: 1rem;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 0.8rem;
+            margin: 0.5rem 0;
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .modal-buttons button {
+            padding: 0.6rem 1.2rem;
+            border-radius: 30px;
+            cursor: pointer;
+        }
+
+        .modal-save {
+            background: var(--primary-green);
+            color: white;
+            border: none;
+        }
+
+        .modal-cancel {
+            background: var(--bg-gray);
+            border: 1px solid var(--border-light);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            background: var(--bg-white);
+            border-radius: 20px;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+        }
+
+        .empty-state p {
+            color: var(--text-muted);
+        }
+
+        /* Utility */
+        .hidden {
+            display: none;
+        }
+
         @@media (max-width: 768px) {
             .sidebar {
                 transform: translateX(-100%);
-                transition: transform 0.3s;
+                position: absolute;
             }
             .main-content {
                 margin-left: 0;
             }
-            .stats-grid, .artifacts-grid {
+            .stats-grid, .artifacts-grid, .feature-cards-grid {
+                grid-template-columns: 1fr;
+            }
+            .vitals-grid {
                 grid-template-columns: 1fr;
             }
         }
@@ -501,6 +1024,7 @@
 <body>
 
 <div class="dashboard-container">
+    <!-- Sidebar -->
     <div class="sidebar">
         <div class="sidebar-header">
             <div class="logo">
@@ -514,26 +1038,44 @@
                 <i class="fas fa-chart-line"></i>
                 <span>Dashboard</span>
             </div>
-            <div class="nav-item" data-page="newchat">
+
+            <div class="nav-item has-dropdown" data-dropdown="assistant">
                 <i class="fas fa-comment-dots"></i>
-                <span>New Chat</span>
+                <span>Symptom Assistant</span>
+                <i class="fas fa-chevron-right dropdown-chevron"></i>
             </div>
-            <div class="nav-item" data-page="chathistory">
-                <i class="fas fa-history"></i>
-                <span>Chat History</span>
+            <div class="sub-nav" data-subnav="assistant">
+                <div class="sub-nav-item" data-page="newchat">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>New Chat</span>
+                </div>
+                <div class="sub-nav-item" data-page="chathistory">
+                    <i class="fas fa-history"></i>
+                    <span>Chat History</span>
+                </div>
             </div>
+
             <div class="nav-item" data-page="artifacts">
                 <i class="fas fa-database"></i>
                 <span>Artifacts</span>
             </div>
-            <div class="nav-item" data-page="medicine">
+
+            <div class="nav-item has-dropdown" data-dropdown="medicine">
                 <i class="fas fa-capsules"></i>
                 <span>Medicine</span>
+                <i class="fas fa-chevron-right dropdown-chevron"></i>
             </div>
-            <div class="nav-item" data-page="nearby">
-                <i class="fas fa-map-marker-alt"></i>
-                <span>Nearby Care</span>
+            <div class="sub-nav" data-subnav="medicine">
+                <div class="sub-nav-item" data-page="medicinesearch">
+                    <i class="fas fa-search"></i>
+                    <span>Search</span>
+                </div>
+                <div class="sub-nav-item" data-page="medicinehistory">
+                    <i class="fas fa-clock"></i>
+                    <span>Search History</span>
+                </div>
             </div>
+
             <div class="nav-item" data-page="vitals">
                 <i class="fas fa-heartbeat"></i>
                 <span>Vitals</span>
@@ -548,7 +1090,7 @@
                     <div class="user-email">@User.Identity?.Name</div>
                 </div>
             </div>
-            <form asp-area="Identity" asp-page="/Account/Logout" method="post">
+            <form asp-area="Identity" asp-page="/Account/Logout" method="post" id="logoutForm">
                 <button type="submit" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Logout</span>
@@ -558,118 +1100,730 @@
     </div>
 
     <div class="main-content">
-        <div id="dynamicContent"></div>
+        <div id="dynamicContent">
+            <div style="text-align: center; padding: 3rem;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary-green);"></i>
+                <p>Loading dashboard...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Create Vital -->
+<div id="vitalModal" class="modal-overlay">
+    <div class="modal-content">
+        <h3>Create New Vital</h3>
+        <input type="text" id="vitalName" placeholder="Vital name (e.g., Blood Pressure)" />
+        <input type="text" id="vitalUnit" placeholder="Unit (e.g., mmHg, mg/dL)" />
+        <div class="modal-buttons">
+            <button class="modal-save" onclick="createVital()">Create</button>
+            <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+        </div>
     </div>
 </div>
 
 <script>
+    // Initial data from server
     const initialData = {
-        userName: '@Model.UserName',
+        userName: '@Html.Raw(Model.UserName ?? "User")',
         chatSessionCount: @Model.ChatSessionCount,
         thisWeekChats: @Model.ThisWeekChats,
         vitalsCount: @Model.VitalsCount,
         streakDays: @Model.StreakDays,
-        recentSessions: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.RecentChatSessions)),
-        userProfile: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.UserProfile))
+        medicinesCount: @Model.MedicinesCount,
+        recentSessions: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.RecentChatSessions ?? new List<ChatSessionSummary>())),
+        userProfile: @Html.Raw(Model.UserProfileJson),
+        recentVitals: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.RecentVitals ?? new List<VitalDisplay>()))
     };
 
-    function loadDashboard() {
+    // Set window variable for easier access
+    window.userProfileData = initialData.userProfile;
+
+    let currentPage = 'dashboard';
+    let editMode = false;
+    let vitalsData = [];
+
+    // Wait for DOM to load
+    document.addEventListener('DOMContentLoaded', function() {
+        setupNavigation();
+        loadDashboard();
+    });
+
+    function setupNavigation() {
+        // Dropdown toggles
+        document.querySelectorAll('.has-dropdown').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const dropdownId = item.dataset.dropdown;
+                const subnav = document.querySelector(`.sub-nav[data-subnav="${dropdownId}"]`);
+                if (subnav) {
+                    subnav.classList.toggle('show');
+                }
+            });
+        });
+
+        // Navigation items
+        document.querySelectorAll('.nav-item[data-page], .sub-nav-item[data-page]').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const page = item.dataset.page;
+                if (page) {
+                    currentPage = page;
+                    
+                    // Update active states
+                    document.querySelectorAll('.nav-item, .sub-nav-item').forEach(nav => {
+                        nav.classList.remove('active');
+                    });
+                    item.classList.add('active');
+                    
+                    loadPageContent(page);
+                }
+            });
+        });
+    }
+
+    async function loadPageContent(page) {
+        const contentDiv = document.getElementById('dynamicContent');
+        contentDiv.innerHTML = '<div style="text-align: center; padding: 3rem;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary-green);"></i><p>Loading...</p></div>';
+        
+        switch(page) {
+            case 'dashboard':
+                await loadDashboard();
+                break;
+            case 'newchat':
+                await loadNewChat();
+                break;
+            case 'chathistory':
+                await loadChatHistory();
+                break;
+            case 'artifacts':
+                await loadArtifacts();
+                break;
+            case 'medicinesearch':
+                await loadMedicineSearch();
+                break;
+            case 'medicinehistory':
+                await loadMedicineHistory();
+                break;
+            case 'vitals':
+                await loadVitals();
+                break;
+            default:
+                await loadDashboard();
+        }
+    }
+
+    async function loadDashboard() {
         const html = `
             <div class="welcome-hero">
-                <div class="welcome-content">
-                    <div class="greeting">👋 Welcome back,</div>
-                    <div class="user-greeting-name">${initialData.userName}!</div>
-                    <div class="welcome-message">Your health journey continues. Here's your health at a glance.</div>
-                    <div class="health-stats">
-                        <div class="stat-card"><div class="stat-number">${initialData.chatSessionCount}</div><div class="stat-label">Total Chats</div></div>
-                        <div class="stat-card"><div class="stat-number">${initialData.thisWeekChats}</div><div class="stat-label">This Week</div></div>
-                        <div class="stat-card"><div class="stat-number">${initialData.vitalsCount}</div><div class="stat-label">Vitals Logged</div></div>
+                <div class="greeting">👋 Welcome back,</div>
+                <div class="user-greeting-name">${escapeHtml(initialData.userName)}!</div>
+                <div class="welcome-message">Your health journey continues. Track symptoms, monitor vitals, and get AI-powered guidance — all in one place.</div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-icon"><i class="fas fa-comments"></i></div>
+                    <div class="stat-info">
+                        <h3>${initialData.chatSessionCount}</h3>
+                        <p>Total Conversations</p>
+                    </div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-icon"><i class="fas fa-calendar-week"></i></div>
+                    <div class="stat-info">
+                        <h3>${initialData.thisWeekChats}</h3>
+                        <p>Chats This Week</p>
+                    </div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-icon"><i class="fas fa-heart"></i></div>
+                    <div class="stat-info">
+                        <h3>${initialData.vitalsCount}</h3>
+                        <p>Vitals Recorded</p>
+                    </div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-icon"><i class="fas fa-capsules"></i></div>
+                    <div class="stat-info">
+                        <h3>${initialData.medicinesCount || 0}</h3>
+                        <p>Medicines Searched</p>
                     </div>
                 </div>
             </div>
-            <div class="stats-grid">
-                <div class="stat-box"><div class="stat-icon"><i class="fas fa-comments"></i></div><div class="stat-info"><h3>${initialData.chatSessionCount}</h3><p>Total Conversations</p></div></div>
-                <div class="stat-box"><div class="stat-icon"><i class="fas fa-calendar-week"></i></div><div class="stat-info"><h3>${initialData.thisWeekChats}</h3><p>Chats This Week</p></div></div>
-                <div class="stat-box"><div class="stat-icon"><i class="fas fa-heart"></i></div><div class="stat-info"><h3>${initialData.vitalsCount}</h3><p>Vitals Recorded</p></div></div>
-                <div class="stat-box"><div class="stat-icon"><i class="fas fa-trophy"></i></div><div class="stat-info"><h3>${initialData.streakDays}</h3><p>Day Streak</p></div></div>
+            <canvas id="activityChart" height="100" style="max-height: 300px;"></canvas>
+        `;
+        document.getElementById('dynamicContent').innerHTML = html;
+        
+        setTimeout(() => {
+            const ctx = document.getElementById('activityChart');
+            if (ctx) {
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        datasets: [{
+                            label: 'Chat Activity',
+                            data: [3, 5, 2, 7, 4, 6, 3],
+                            borderColor: '#0f5c3b',
+                            backgroundColor: 'rgba(15, 92, 59, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { position: 'bottom' }
+                        }
+                    }
+                });
+            }
+        }, 100);
+    }
+
+    async function loadNewChat() {
+        try {
+            const response = await fetch('/Chat');
+            const html = await response.text();
+            document.getElementById('dynamicContent').innerHTML = html;
+            
+            setTimeout(() => {
+                const chatForm = document.querySelector('#chatForm');
+                if (chatForm) {
+                    chatForm.addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        const formData = new FormData(chatForm);
+                        const response = await fetch('/Chat', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        const newHtml = await response.text();
+                        document.getElementById('dynamicContent').innerHTML = newHtml;
+                    });
+                }
+            }, 100);
+        } catch (error) {
+            document.getElementById('dynamicContent').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><h3>Error loading chat</h3><p>Please try again.</p></div>';
+        }
+    }
+
+    async function loadChatHistory() {
+        let sessionsHtml = '';
+        if (initialData.recentSessions && initialData.recentSessions.length > 0) {
+            sessionsHtml = initialData.recentSessions.map(session => {
+                let formattedDate = 'Unknown date';
+                let sessionTitle = 'Chat Conversation';
+                
+                try {
+                    if (session.startedAt) {
+                        const date = new Date(session.startedAt);
+                        if (!isNaN(date.getTime())) {
+                            formattedDate = date.toLocaleString();
+                        }
+                    }
+                } catch(e) {
+                    formattedDate = 'Date unavailable';
+                }
+                
+                sessionTitle = (session.title && session.title !== 'undefined' && session.title !== 'null') ? session.title : 'Chat Conversation';
+                const msgCount = session.messageCount || 0;
+                
+                return `
+                    <div class="session-item-full" onclick="loadChatSession('${session.id}')">
+                        <div class="session-info-full">
+                            <div class="session-title-full">${escapeHtml(sessionTitle)}</div>
+                            <div class="session-date-full">${formattedDate}</div>
+                        </div>
+                        <div class="session-badge-full">${msgCount} msgs</div>
+                    </div>
+                `;
+            }).join('');
+        } else {
+            sessionsHtml = '<div class="empty-state"><i class="fas fa-comment-slash"></i><p>No conversations yet</p><p style="font-size: 0.8rem;">Start a new chat to begin.</p></div>';
+        }
+        const html = `<div class="chat-history-container"><h2 style="margin-bottom: 1rem;"><i class="fas fa-history"></i> Chat History</h2><div class="session-list-full">${sessionsHtml}</div></div>`;
+        document.getElementById('dynamicContent').innerHTML = html;
+    }
+
+    async function loadChatSession(sessionId) {
+        if (!sessionId || sessionId === 'undefined' || sessionId === 'null') {
+            document.getElementById('dynamicContent').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><h3>Invalid session</h3><p>This chat session cannot be loaded.</p></div>';
+            return;
+        }
+        
+        document.getElementById('dynamicContent').innerHTML = '<div style="text-align: center; padding: 3rem;"><i class="fas fa-spinner fa-spin"></i><p>Loading conversation...</p></div>';
+        try {
+            const response = await fetch(`/Chat?sessionId=${encodeURIComponent(sessionId)}`);
+            if (response.ok) {
+                const html = await response.text();
+                document.getElementById('dynamicContent').innerHTML = html;
+            } else {
+                throw new Error('Failed to load chat');
+            }
+        } catch (error) {
+            document.getElementById('dynamicContent').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><h3>Error loading chat</h3><p>Please try again.</p></div>';
+        }
+    }
+
+    async function loadArtifacts() {
+        let profile = null;
+        try {
+            if (window.userProfileData) {
+                profile = window.userProfileData;
+            } else {
+                profile = initialData.userProfile;
+            }
+        } catch(e) {
+            console.error('Error parsing profile:', e);
+        }
+        
+        if (!profile || !profile.fullName) {
+            document.getElementById('dynamicContent').innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-database"></i>
+                    <h3>No profile data found</h3>
+                    <p>Please complete your registration to see your health artifacts.</p>
+                    <button class="edit-toggle-btn" onclick="window.location.href='/Identity/Account/Register'" style="margin-top: 1rem;">
+                        Complete Registration
+                    </button>
+                </div>
+            `;
+            return;
+        }
+        
+        let artifactsHtml = `
+            <div class="artifacts-header">
+                <h2><i class="fas fa-database"></i> My Health Artifacts</h2>
+                <button class="edit-toggle-btn" onclick="toggleArtifactEditMode()">
+                    <i class="fas fa-edit"></i> ${editMode ? 'Cancel Edit' : 'Edit Profile'}
+                </button>
+            </div>
+            ${editMode ? '<div class="alert-info"><i class="fas fa-info-circle"></i> Click on any field to edit it. Changes save automatically.</div>' : ''}
+            <div class="artifacts-grid">
+                <div class="artifact-card">
+                    <div class="card-header"><i class="fas fa-user-circle"></i><h3>Personal Information</h3></div>
+                    <div class="card-body">
+                        ${renderEditableField('Full Name', profile.fullName || 'Not set', 'fullName')}
+                        ${renderEditableField('Username', profile.userName || profile.username || 'Not set', 'userName')}
+                        ${renderEditableField('Email', profile.email || 'Not set', 'email')}
+                        ${renderEditableField('Date of Birth', profile.dateOfBirth ? new Date(profile.dateOfBirth).toLocaleDateString() : 'Not set', 'dateOfBirth')}
+                        ${renderEditableField('Gender', profile.gender || 'Not set', 'gender')}
+                    </div>
+                </div>
+                
+                <div class="artifact-card">
+                    <div class="card-header"><i class="fas fa-heartbeat"></i><h3>Physical Health Metrics</h3></div>
+                    <div class="card-body">
+                        ${renderEditableField('Weight (kg)', profile.weightKg ? profile.weightKg + ' kg' : 'Not set', 'weightKg')}
+                        ${renderEditableField('Height (cm)', profile.heightCm ? profile.heightCm + ' cm' : 'Not set', 'heightCm')}
+                        ${renderEditableField('BMI', profile.bmi || 'Calculated automatically', 'bmi', true)}
+                        ${renderEditableField('Blood Type', profile.bloodType || 'Not specified', 'bloodType')}
+                    </div>
+                </div>
+                
+                <div class="artifact-card">
+                    <div class="card-header"><i class="fas fa-notes-medical"></i><h3>Medical Background</h3></div>
+                    <div class="card-body">
+                        ${renderEditableField('Pre-existing Conditions', profile.preExistingConditions?.length ? profile.preExistingConditions.join(', ') : 'None', 'preExistingConditions')}
+                        ${renderEditableField('Allergies', profile.allergies?.length ? profile.allergies.join(', ') : 'None', 'allergies')}
+                        ${renderEditableField('Current Medications', profile.currentMedications || 'None', 'currentMedications')}
+                        ${renderEditableField('Smoking Habit', profile.smokingHabit || 'Not specified', 'smokingHabit')}
+                        ${renderEditableField('Alcohol Habit', profile.alcoholHabit || 'Not specified', 'alcoholHabit')}
+                    </div>
+                </div>
+                
+                <div class="artifact-card">
+                    <div class="card-header"><i class="fas fa-bullseye"></i><h3>Health Goals & Emergency</h3></div>
+                    <div class="card-body">
+                        ${renderEditableField('Primary Goal', profile.primaryGoal || 'Not set', 'primaryGoal')}
+                        ${renderEditableField('Activity Level', profile.activityLevel || 'Not set', 'activityLevel')}
+                        ${renderEditableField('Daily Calorie Target', profile.dailyCalorieTarget || 'Not set', 'dailyCalorieTarget')}
+                        ${renderEditableField('Country/Region', profile.countryRegion || 'Not set', 'countryRegion')}
+                        ${renderEditableField('Emergency Contact', profile.emergencyContactName || 'Not set', 'emergencyContactName')}
+                        ${renderEditableField('Emergency Phone', profile.emergencyContactPhone || 'Not set', 'emergencyContactPhone')}
+                    </div>
+                </div>
+            </div>
+        `;
+        document.getElementById('dynamicContent').innerHTML = artifactsHtml;
+    }
+
+    function renderEditableField(label, value, fieldName, isReadOnly = false) {
+        if (isReadOnly) {
+            return `
+                <div class="info-row">
+                    <span class="info-label">${label}</span>
+                    <span class="info-value">${escapeHtml(String(value || '—'))}</span>
+                </div>
+            `;
+        }
+        
+        if (editMode) {
+            let inputType = 'text';
+            if (fieldName === 'weightKg' || fieldName === 'heightCm') inputType = 'number';
+            if (fieldName === 'email') inputType = 'email';
+            if (fieldName === 'dateOfBirth') inputType = 'date';
+            
+            let cleanValue = String(value || '');
+            if (value === 'Not set') cleanValue = '';
+            cleanValue = cleanValue.replace(/ kg| cm/g, '');
+            
+            return `
+                <div class="info-row editing" data-field="${fieldName}" data-label="${label}">
+                    <span class="info-label">${label}</span>
+                    <div class="info-value-edit">
+                        <input type="${inputType}" id="edit_${fieldName}" value="${escapeHtml(cleanValue)}" 
+                               placeholder="Enter ${label.toLowerCase()}" style="width: 100%;">
+                        <button onclick="saveField('${fieldName}', '${label}')">Save</button>
+                    </div>
+                </div>
+            `;
+        } else {
+            return `
+                <div class="info-row">
+                    <span class="info-label">${label}</span>
+                    <span class="info-value">${escapeHtml(String(value || '—'))}</span>
+                </div>
+            `;
+        }
+    }
+
+    async function saveField(fieldName, label) {
+        const input = document.getElementById(`edit_${fieldName}`);
+        if (!input) return;
+        
+        let value = input.value.trim();
+        if (value === '') {
+            value = null;
+        }
+        
+        const button = input.parentElement.querySelector('button');
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        button.disabled = true;
+        
+        try {
+            const response = await fetch('/api/profile/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ field: fieldName, value: value })
+            });
+            
+            if (response.ok) {
+                button.innerHTML = '<i class="fas fa-check"></i>';
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                }, 1500);
+                setTimeout(() => loadArtifacts(), 1000);
+            } else {
+                button.innerHTML = originalText;
+                button.disabled = false;
+                alert('Error saving. Please try again.');
+            }
+        } catch (error) {
+            button.innerHTML = originalText;
+            button.disabled = false;
+            alert('Error saving. Please try again.');
+        }
+    }
+
+    function toggleArtifactEditMode() {
+        editMode = !editMode;
+        loadArtifacts();
+    }
+
+    function loadMedicineSearch() {
+        const html = `
+            <div class="medicine-container">
+                <div class="medicine-header">
+                    <h1><i class="fas fa-capsules"></i> Medicine & Drug Labels</h1>
+                    <p>Search FDA-approved drug information, warnings, and dosage guidelines</p>
+                </div>
+                <div id="featureCards" class="feature-cards-grid">
+                    <div class="feature-card"><i class="fas fa-pills"></i><h4>Drug Information</h4><p>Complete FDA label data</p></div>
+                    <div class="feature-card"><i class="fas fa-shield-alt"></i><h4>Safety Warnings</h4><p>Black box warnings & precautions</p></div>
+                    <div class="feature-card"><i class="fas fa-flask"></i><h4>Interactions</h4><p>Drug-drug interaction info</p></div>
+                    <div class="feature-card"><i class="fas fa-clipboard-list"></i><h4>Dosage Guide</h4><p>Standard dosing information</p></div>
+                </div>
+                <div id="searchResults"></div>
+                <div class="medicine-search-bar">
+                    <input type="text" id="medicineQuery" placeholder="Search by drug name (e.g., aspirin, ibuprofen)..." />
+                    <button onclick="searchMedicine()"><i class="fas fa-arrow-right"></i> Search</button>
+                </div>
             </div>
         `;
         document.getElementById('dynamicContent').innerHTML = html;
     }
 
-    async function loadNewChat() {
-        const response = await fetch('/Chat');
-        const html = await response.text();
-        document.getElementById('dynamicContent').innerHTML = html;
-    }
-
-    function loadChatHistory() {
-        let sessionsHtml = '';
-        if (initialData.recentSessions && initialData.recentSessions.length > 0) {
-            sessionsHtml = initialData.recentSessions.map(session => `
-                <div class="session-item-full" onclick="window.location.href='/Chat?sessionId=${session.id}'">
-                    <div class="session-info-full">
-                        <div class="session-title-full">${escapeHtml(session.title)}</div>
-                        <div class="session-date-full">${new Date(session.startedAt).toLocaleString()}</div>
-                    </div>
-                    <div class="session-badge-full">${session.messageCount} msgs</div>
-                </div>
-            `).join('');
-        } else {
-            sessionsHtml = '<div style="text-align: center; padding: 2rem;"><i class="fas fa-comment-slash" style="font-size: 3rem; opacity: 0.3;"></i><p style="margin-top: 1rem;">No conversations yet</p></div>';
+    async function searchMedicine() {
+        const query = document.getElementById('medicineQuery')?.value;
+        if (!query) return;
+        
+        const featureCards = document.getElementById('featureCards');
+        if (featureCards) featureCards.style.display = 'none';
+        
+        const resultsDiv = document.getElementById('searchResults');
+        if (resultsDiv) {
+            resultsDiv.innerHTML = '<div style="text-align: center; padding: 2rem;"><i class="fas fa-spinner fa-spin"></i> Searching...</div>';
         }
-        const html = `<div class="chat-history-container"><div class="chat-history-header"><h2><i class="fas fa-history"></i> Chat History</h2><p>All your conversations with Diagnova AI assistant</p></div><div class="session-list-full">${sessionsHtml}</div></div>`;
-        document.getElementById('dynamicContent').innerHTML = html;
+        
+        try {
+            const response = await fetch(`/Medicine?Query=${encodeURIComponent(query)}`);
+            const html = await response.text();
+            const temp = document.createElement('div');
+            temp.innerHTML = html;
+            const resultCard = temp.querySelector('.result-card, .dn-surface-card');
+            if (resultsDiv) {
+                if (resultCard) {
+                    resultsDiv.innerHTML = resultCard.outerHTML;
+                } else {
+                    resultsDiv.innerHTML = '<div class="result-card"><p>No results found. Try a different spelling or generic name.</p></div>';
+                }
+            }
+        } catch (error) {
+            if (resultsDiv) {
+                resultsDiv.innerHTML = '<div class="result-card"><p>Error searching. Please try again.</p></div>';
+            }
+        }
     }
 
-    async function loadArtifacts() {
-        const response = await fetch('/Artifacts');
-        const html = await response.text();
+    function loadMedicineHistory() {
+        const html = `
+            <div class="medicine-container">
+                <div class="medicine-header">
+                    <h1><i class="fas fa-history"></i> Medicine Search History</h1>
+                    <p>Previously searched medications</p>
+                </div>
+                <div class="search-history-list" id="historyList">
+                    <div style="text-align: center; padding: 2rem;"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
+                </div>
+            </div>
+        `;
         document.getElementById('dynamicContent').innerHTML = html;
+        loadSearchHistory();
     }
 
-    async function loadMedicine() {
-        const response = await fetch('/Medicine');
-        const html = await response.text();
-        document.getElementById('dynamicContent').innerHTML = html;
+    async function loadSearchHistory() {
+        try {
+            const response = await fetch('/api/medicine/history');
+            const history = await response.json();
+            const historyList = document.getElementById('historyList');
+            if (historyList) {
+                if (history && history.length > 0) {
+                    historyList.innerHTML = history.map(item => `
+                        <div class="history-item" onclick="searchHistoryItem('${escapeHtml(item.query)}')">
+                            <strong>${escapeHtml(item.query)}</strong>
+                            <div class="session-date-full">${new Date(item.searchedAt).toLocaleString()}</div>
+                        </div>
+                    `).join('');
+                } else {
+                    historyList.innerHTML = '<div class="empty-state"><i class="fas fa-history"></i><p>No search history yet</p></div>';
+                }
+            }
+        } catch (error) {
+            const historyList = document.getElementById('historyList');
+            if (historyList) {
+                historyList.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>Error loading history</p></div>';
+            }
+        }
     }
 
-    async function loadNearby() {
-        const response = await fetch('/Nearby');
-        const html = await response.text();
-        document.getElementById('dynamicContent').innerHTML = html;
+    function searchHistoryItem(query) {
+        const searchInput = document.getElementById('medicineQuery');
+        if (searchInput) {
+            searchInput.value = query;
+            searchMedicine();
+        }
     }
 
     async function loadVitals() {
-        const response = await fetch('/Vitals');
-        const html = await response.text();
-        document.getElementById('dynamicContent').innerHTML = html;
+        try {
+            const response = await fetch('/api/vitals');
+            vitalsData = await response.json();
+            renderVitals();
+        } catch (error) {
+            console.error('Error loading vitals:', error);
+            renderVitals();
+        }
+    }
+
+    function renderVitals() {
+        let vitalsHtml = `
+            <div class="vitals-header">
+                <h2><i class="fas fa-heartbeat"></i> Vital Signs Tracker</h2>
+                <button class="create-vital-btn" onclick="showCreateVitalModal()">
+                    <i class="fas fa-plus"></i> Create Vital
+                </button>
+            </div>
+            <div class="vitals-grid" id="vitalsGrid">
+        `;
+        
+        if (vitalsData && vitalsData.length > 0) {
+            vitalsHtml += vitalsData.map(vital => `
+                <div class="vital-card" data-vital-id="${vital.id}">
+                    <div class="vital-card-header">
+                        <h3>${escapeHtml(vital.name)}</h3>
+                        <div class="latest-reading">
+                            ${vital.readings && vital.readings.length > 0 ? vital.readings[vital.readings.length - 1].value : '—'}
+                            <small>${escapeHtml(vital.unit)}</small>
+                        </div>
+                    </div>
+                    <div class="vital-card-body">
+                        <div class="sparkline-container">
+                            <canvas id="sparkline-${vital.id}" height="60"></canvas>
+                        </div>
+                        <div class="readings-log" id="readings-${vital.id}">
+                            ${renderReadingsLog(vital.readings)}
+                        </div>
+                        <div class="inline-add-form" id="addForm-${vital.id}">
+                            <input type="number" id="readingValue-${vital.id}" placeholder="Enter value" step="any" />
+                            <input type="text" id="readingNote-${vital.id}" placeholder="Note (optional)" />
+                            <button onclick="addReading('${vital.id}', '${escapeHtml(vital.name)}', '${escapeHtml(vital.unit)}')">Save</button>
+                        </div>
+                        <button class="add-reading-btn" onclick="toggleAddForm('${vital.id}')">
+                            <i class="fas fa-plus"></i> Add Reading
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            vitalsHtml += '<div class="empty-state" style="grid-column: span 2;"><i class="fas fa-heartbeat"></i><h3>No vitals created yet</h3><p>Click "Create Vital" to start tracking your health metrics.</p></div>';
+        }
+        
+        vitalsHtml += '</div>';
+        document.getElementById('dynamicContent').innerHTML = vitalsHtml;
+        
+        setTimeout(() => {
+            vitalsData.forEach(vital => {
+                if (vital.readings && vital.readings.length > 0) {
+                    renderSparkline(vital.id, vital.readings);
+                }
+            });
+        }, 100);
+    }
+
+    function renderReadingsLog(readings) {
+        if (!readings || readings.length === 0) return '<div class="reading-item">No readings yet</div>';
+        return readings.slice().reverse().slice(0, 10).map(r => `
+            <div class="reading-item">
+                <span class="reading-date">${new Date(r.recordedAt).toLocaleString()}</span>
+                <span><strong>${r.value}</strong> ${r.note ? `(${escapeHtml(r.note)})` : ''}</span>
+            </div>
+        `).join('');
+    }
+
+    function renderSparkline(id, readings) {
+        const canvas = document.getElementById(`sparkline-${id}`);
+        if (!canvas || !readings || readings.length === 0) return;
+        
+        const values = readings.map(r => parseFloat(r.value)).filter(v => !isNaN(v));
+        if (values.length === 0) return;
+        
+        new Chart(canvas, {
+            type: 'line',
+            data: {
+                labels: values.map((_, i) => i + 1),
+                datasets: [{
+                    data: values,
+                    borderColor: '#0d5c3a',
+                    borderWidth: 2,
+                    fill: false,
+                    pointRadius: 2,
+                    pointBackgroundColor: '#0d5c3a'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                scales: { x: { display: false }, y: { display: false } }
+            }
+        });
+    }
+
+    function showCreateVitalModal() {
+        const modal = document.getElementById('vitalModal');
+        if (modal) modal.classList.add('show');
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('vitalModal');
+        if (modal) modal.classList.remove('show');
+        const nameInput = document.getElementById('vitalName');
+        const unitInput = document.getElementById('vitalUnit');
+        if (nameInput) nameInput.value = '';
+        if (unitInput) unitInput.value = '';
+    }
+
+    async function createVital() {
+        const name = document.getElementById('vitalName')?.value;
+        const unit = document.getElementById('vitalUnit')?.value;
+        if (!name || !unit) {
+            alert('Please enter both name and unit');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/vitals', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, unit })
+            });
+            if (response.ok) {
+                closeModal();
+                await loadVitals();
+            } else {
+                alert('Error creating vital');
+            }
+        } catch (error) {
+            alert('Error creating vital');
+        }
+    }
+
+    function toggleAddForm(vitalId) {
+        const form = document.getElementById(`addForm-${vitalId}`);
+        if (form) form.classList.toggle('show');
+    }
+
+    async function addReading(vitalId, vitalName, unit) {
+        const valueInput = document.getElementById(`readingValue-${vitalId}`);
+        const noteInput = document.getElementById(`readingNote-${vitalId}`);
+        const value = valueInput?.value;
+        const note = noteInput?.value;
+        
+        if (!value) {
+            alert('Please enter a value');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/vitals/reading', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ vitalId, value: parseFloat(value), note })
+            });
+            if (response.ok) {
+                if (valueInput) valueInput.value = '';
+                if (noteInput) noteInput.value = '';
+                const form = document.getElementById(`addForm-${vitalId}`);
+                if (form) form.classList.remove('show');
+                await loadVitals();
+            } else {
+                alert('Error adding reading');
+            }
+        } catch (error) {
+            alert('Error adding reading');
+        }
     }
 
     function escapeHtml(text) {
+        if (!text) return '';
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
     }
-
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.addEventListener('click', () => {
-            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-            item.classList.add('active');
-            const page = item.dataset.page;
-            switch(page) {
-                case 'dashboard': loadDashboard(); break;
-                case 'newchat': loadNewChat(); break;
-                case 'chathistory': loadChatHistory(); break;
-                case 'artifacts': loadArtifacts(); break;
-                case 'medicine': loadMedicine(); break;
-                case 'nearby': loadNearby(); break;
-                case 'vitals': loadVitals(); break;
-            }
-        });
-    });
-
-    loadDashboard();
 </script>
 </body>
 </html>

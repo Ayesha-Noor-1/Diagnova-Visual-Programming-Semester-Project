@@ -25,6 +25,12 @@ public class MongoDbService
 
     public IMongoCollection<MongoVitalReading> VitalReadings =>
         _database.GetCollection<MongoVitalReading>("VitalReadings");
+
+    public IMongoCollection<VitalDefinition> VitalDefinitions =>
+        _database.GetCollection<VitalDefinition>("VitalDefinitions");
+
+    public IMongoCollection<MongoMedicineSearch> MedicineSearchHistory =>
+        _database.GetCollection<MongoMedicineSearch>("MedicineSearchHistory");
 }
 
 public class MongoDbSettings
