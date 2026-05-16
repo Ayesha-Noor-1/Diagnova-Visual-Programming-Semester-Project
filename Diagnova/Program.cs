@@ -4,6 +4,8 @@ using Diagnova.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using MongoDB.Driver;
 
 // When the working directory or base path is bin/Debug/net10.0, ASP.NET looks for wwwroot there and fails.
@@ -98,7 +100,14 @@ builder.Services.PostConfigure<OpenAiOptions>(o =>
 });
 builder.Services.AddHttpClient<IOpenAiChatService, OpenAiChatService>();
 builder.Services.AddHttpClient<IOpenFdaService, OpenFdaService>();
+builder.Services.AddHttpClient<EmergencyPlacesService>();
 builder.Services.AddSingleton<IEmergencyDetectorService, EmergencyDetectorService>();
+
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+});
 
 var app = builder.Build();
 
@@ -222,20 +231,105 @@ app.MapGet("/api/medicine/history", async (MongoDbService mongoDb, ClaimsPrincip
     return Results.Ok(history);
 }).RequireAuthorization();
 
-app.MapStaticAssets();
-app.MapRazorPages()
-    .WithStaticAssets();
-
-// Apply SQL Server migrations for Identity
-using (var scope = app.Services.CreateScope())
+app.MapGet("/api/medicine/search", async (string query, IOpenFdaService fda, MongoDbService mongoDb, ClaimsPrincipal user, CancellationToken ct) =>
 {
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
-}
+    var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+    if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+    if (string.IsNullOrWhiteSpace(query)) return Results.BadRequest(new { error = "Query is required." });
 
-app.Run();
+    var result = await fda.SearchDrugLabelAsync(query, ct);
 
-// API endpoint for updating profile
+    if (result is null)
+        return Results.NotFound(new { searched = true, found = false, query });
+
+    await mongoDb.MedicineSearchHistory.InsertOneAsync(new MongoMedicineSearch
+    {
+        UserId = userId,
+        Query = query.Trim(),
+        SearchedAt = DateTimeOffset.UtcNow,
+        BrandName = result.BrandName ?? result.GenericName,
+    }, cancellationToken: ct);
+
+    return Results.Ok(new
+    {
+        searched = true,
+        found = true,
+        query,
+        brandName = result.BrandName,
+        genericName = result.GenericName,
+        purpose = result.Purpose,
+        dosageAndAdministration = result.DosageAndAdministration,
+        warnings = result.Warnings,
+        adverseReactions = result.AdverseReactions,
+        contraindications = result.Contraindications,
+    });
+}).RequireAuthorization();
+
+app.MapGet("/api/chat/sessions", async (MongoDbService mongoDb, ClaimsPrincipal user) =>
+{
+    var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+    if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+
+    var sessions = await mongoDb.ChatSessions
+        .Find(s => s.UserId == userId)
+        .SortByDescending(s => s.StartedAt)
+        .ToListAsync();
+
+    var list = new List<object>();
+    foreach (var session in sessions)
+    {
+        var messages = await mongoDb.ChatMessages
+            .Find(m => m.SessionId == session.Id)
+            .SortBy(m => m.CreatedAt)
+            .ToListAsync();
+
+        var firstUser = messages.FirstOrDefault(m => m.Role == "user");
+        var title = firstUser != null
+            ? (firstUser.Content.Length > 48 ? firstUser.Content[..48] + "…" : firstUser.Content)
+            : "New conversation";
+
+        list.Add(new
+        {
+            id = session.Id,
+            title,
+            startedAt = session.StartedAt,
+            closedAt = session.ClosedAt,
+            messageCount = messages.Count,
+        });
+    }
+
+    return Results.Ok(list);
+}).RequireAuthorization();
+
+app.MapGet("/api/dashboard/activity", async (MongoDbService mongoDb, ClaimsPrincipal user) =>
+{
+    var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+    if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+
+    var sessionIds = await mongoDb.ChatSessions
+        .Find(s => s.UserId == userId)
+        .Project(s => s.Id)
+        .ToListAsync();
+    var idList = sessionIds.Where(id => !string.IsNullOrEmpty(id)).Cast<string>().ToList();
+
+    var labels = new List<string>();
+    var data = new List<int>();
+    for (var i = 6; i >= 0; i--)
+    {
+        var day = DateTimeOffset.UtcNow.Date.AddDays(-i);
+        labels.Add(day.ToString("ddd"));
+        var next = day.AddDays(1);
+        var count = idList.Count == 0
+            ? 0
+            : await mongoDb.ChatMessages
+                .Find(m => idList.Contains(m.SessionId) && m.CreatedAt >= day && m.CreatedAt < next)
+                .CountDocumentsAsync();
+        data.Add((int)count);
+    }
+
+    return Results.Ok(new { labels, data });
+}).RequireAuthorization();
+
 app.MapPost("/api/profile/update", async (MongoDbService mongoDb, ClaimsPrincipal user, UpdateProfileRequest request) =>
 {
     var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -244,7 +338,6 @@ app.MapPost("/api/profile/update", async (MongoDbService mongoDb, ClaimsPrincipa
     var profile = await mongoDb.MedicalProfiles.Find(p => p.UserId == userId).FirstOrDefaultAsync();
     if (profile == null) return Results.NotFound();
 
-    // Update the specified field
     switch (request.Field?.ToLower())
     {
         case "fullname":
@@ -298,20 +391,33 @@ app.MapPost("/api/profile/update", async (MongoDbService mongoDb, ClaimsPrincipa
         case "emergencycontactphone":
             profile.EmergencyContactPhone = request.Value ?? string.Empty;
             break;
-        case "preExistingConditions":
-            // Handle comma-separated list
+        case "preexistingconditions":
             profile.PreExistingConditions = request.Value?.Split(',').Select(s => s.Trim()).ToList() ?? new List<string>();
             break;
         case "allergies":
             profile.Allergies = request.Value?.Split(',').Select(s => s.Trim()).ToList() ?? new List<string>();
             break;
+        default:
+            return Results.BadRequest(new { error = "Unknown field." });
     }
 
     profile.UpdatedAt = DateTime.UtcNow;
     await mongoDb.MedicalProfiles.ReplaceOneAsync(p => p.Id == profile.Id, profile);
-
     return Results.Ok(new { success = true });
 }).RequireAuthorization();
+
+app.MapStaticAssets();
+app.MapRazorPages()
+    .WithStaticAssets();
+
+// Apply SQL Server migrations for Identity
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+}
+
+app.Run();
 
 public record UpdateProfileRequest(string Field, string? Value);
 

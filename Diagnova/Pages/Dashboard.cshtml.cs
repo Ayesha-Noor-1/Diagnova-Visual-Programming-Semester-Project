@@ -88,8 +88,8 @@ public class DashboardModel : PageModel
             });
         }
 
-        // Get vitals count
-        VitalsCount = (int)await _mongoDb.VitalReadings.Find(v => v.UserId == userId).CountDocumentsAsync();
+        // Get vitals count (definitions = tracked metrics)
+        VitalsCount = (int)await _mongoDb.VitalDefinitions.Find(v => v.UserId == userId).CountDocumentsAsync();
 
         // Get medicines count from search history
         MedicinesCount = (int)await _mongoDb.MedicineSearchHistory.Find(m => m.UserId == userId).CountDocumentsAsync();

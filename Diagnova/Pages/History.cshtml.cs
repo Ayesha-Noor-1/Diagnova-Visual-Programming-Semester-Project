@@ -30,19 +30,27 @@ public class HistoryModel : PageModel
         var result = new List<HistoryRow>();
         foreach (var s in sessions)
         {
-            var messageCount = await _mongoDb.ChatMessages
+            var messages = await _mongoDb.ChatMessages
                 .Find(m => m.SessionId == s.Id)
-                .CountDocumentsAsync();
+                .SortBy(m => m.CreatedAt)
+                .ToListAsync();
+
+            var messageCount = messages.Count;
+            var firstUser = messages.FirstOrDefault(m => m.Role == "user");
+            var title = firstUser != null
+                ? (firstUser.Content.Length > 48 ? firstUser.Content[..48] + "…" : firstUser.Content)
+                : "New conversation";
 
             result.Add(new HistoryRow(
                 s.Id ?? string.Empty,
+                title,
                 s.StartedAt,
                 s.ClosedAt,
-                (int)messageCount));
+                messageCount));
         }
 
         Sessions = result;
     }
 }
 
-public sealed record HistoryRow(string Id, DateTimeOffset StartedAt, DateTimeOffset? ClosedAt, int MessageCount);
+public sealed record HistoryRow(string Id, string Title, DateTimeOffset StartedAt, DateTimeOffset? ClosedAt, int MessageCount);

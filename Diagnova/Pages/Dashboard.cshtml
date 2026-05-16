@@ -14,6 +14,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <style>
         * {
             margin: 0;
@@ -276,8 +278,8 @@
         }
 
         @@keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         /* Dashboard Stats */
@@ -774,6 +776,64 @@
             border-radius: 12px;
         }
 
+        .history-card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1rem;
+        }
+
+        .history-card {
+            background: var(--bg-white);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 1rem 1.15rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .history-card:hover {
+            border-color: var(--primary-green);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .history-card-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 0.35rem;
+            color: var(--text-dark);
+        }
+
+        .history-card-meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .dn-dashboard-chat-wrap .dn-chat-sidebar {
+            display: none;
+        }
+
+        .dn-dashboard-chat-wrap .dn-chat-app {
+            min-height: calc(100vh - 1rem);
+            max-height: calc(100vh - 1rem);
+        }
+
+        .chart-panel {
+            background: var(--bg-white);
+            border-radius: 20px;
+            padding: 1.25rem 1.5rem;
+            margin-top: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-light);
+        }
+
+        .chart-panel h3 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+        }
+
         /* Vitals Styles */
         .vitals-header {
             display: flex;
@@ -1239,7 +1299,7 @@
                     <div class="stat-icon"><i class="fas fa-heart"></i></div>
                     <div class="stat-info">
                         <h3>${initialData.vitalsCount}</h3>
-                        <p>Vitals Recorded</p>
+                        <p>Vitals Tracked</p>
                     </div>
                 </div>
                 <div class="stat-box">
@@ -1250,20 +1310,25 @@
                     </div>
                 </div>
             </div>
-            <canvas id="activityChart" height="100" style="max-height: 300px;"></canvas>
+            <div class="chart-panel">
+                <h3><i class="fas fa-chart-line"></i> Messages (last 7 days)</h3>
+                <canvas id="activityChart" height="100" style="max-height: 280px;"></canvas>
+            </div>
         `;
         document.getElementById('dynamicContent').innerHTML = html;
-        
-        setTimeout(() => {
+
+        try {
+            const actRes = await fetch('/api/dashboard/activity', { credentials: 'same-origin' });
+            const activity = actRes.ok ? await actRes.json() : { labels: [], data: [] };
             const ctx = document.getElementById('activityChart');
             if (ctx) {
                 new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        labels: activity.labels || [],
                         datasets: [{
-                            label: 'Chat Activity',
-                            data: [3, 5, 2, 7, 4, 6, 3],
+                            label: 'Messages',
+                            data: activity.data || [],
                             borderColor: '#0f5c3b',
                             backgroundColor: 'rgba(15, 92, 59, 0.1)',
                             fill: true,
@@ -1273,45 +1338,86 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: true,
-                        plugins: {
-                            legend: { position: 'bottom' }
-                        }
+                        plugins: { legend: { position: 'bottom' } },
+                        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
                     }
                 });
             }
-        }, 100);
+        } catch (e) {
+            console.error('Activity chart failed', e);
+        }
+    }
+
+    function loadScriptOnce(src) {
+        return new Promise((resolve, reject) => {
+            if (document.querySelector('script[src="' + src + '"]')) { resolve(); return; }
+            const s = document.createElement('script');
+            s.src = src;
+            s.onload = resolve;
+            s.onerror = reject;
+            document.body.appendChild(s);
+        });
+    }
+
+    async function ensureChatAssets() {
+        if (!window.bootstrap) await loadScriptOnce('/lib/bootstrap/dist/js/bootstrap.bundle.min.js');
+        if (!window.DiagnovaChat) await loadScriptOnce('/js/chat.js');
+    }
+
+    function wireDashboardChatForm(root) {
+        if (window.DiagnovaChat) {
+            window.DiagnovaChat.init(root);
+            window.DiagnovaChat.initEmergencyMap(root);
+            window.DiagnovaChat.wireNewChatForm(root);
+            window.DiagnovaChat.wireEmergencyBanner(root);
+        }
+    }
+
+    async function mountChatPartial(url) {
+        const contentDiv = document.getElementById('dynamicContent');
+        contentDiv.innerHTML = '<div class="dn-dashboard-chat-wrap" id="chatMount"><div style="text-align:center;padding:3rem;"><i class="fas fa-spinner fa-spin"></i></div></div>';
+        try {
+            const response = await fetch(url, { credentials: 'same-origin' });
+            const html = await response.text();
+            contentDiv.innerHTML = '<div class="dn-dashboard-chat-wrap" id="chatMount">' + html + '</div>';
+            await ensureChatAssets();
+            const mount = document.getElementById('chatMount');
+            if (mount && window.DiagnovaChat) {
+                wireDashboardChatForm(mount);
+            }
+        } catch (error) {
+            contentDiv.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><h3>Error loading chat</h3></div>';
+        }
     }
 
     async function loadNewChat() {
         try {
-            const response = await fetch('/Chat');
-            const html = await response.text();
-            document.getElementById('dynamicContent').innerHTML = html;
-            
-            setTimeout(() => {
-                const chatForm = document.querySelector('#chatForm');
-                if (chatForm) {
-                    chatForm.addEventListener('submit', async (e) => {
-                        e.preventDefault();
-                        const formData = new FormData(chatForm);
-                        const response = await fetch('/Chat', {
-                            method: 'POST',
-                            body: formData
-                        });
-                        const newHtml = await response.text();
-                        document.getElementById('dynamicContent').innerHTML = newHtml;
-                    });
-                }
-            }, 100);
+            await ensureChatAssets();
+            var mount = document.getElementById('chatMount');
+            if (!mount || !mount.querySelector('#newChatForm')) {
+                await mountChatPartial('/Chat?handler=Partial');
+            }
+            if (window.DiagnovaChat) {
+                window.DiagnovaChat.startNewChat(document.getElementById('chatMount') || document);
+            }
+            return;
         } catch (error) {
             document.getElementById('dynamicContent').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><h3>Error loading chat</h3><p>Please try again.</p></div>';
         }
     }
 
     async function loadChatHistory() {
+        let sessions = [];
+        try {
+            const res = await fetch('/api/chat/sessions', { credentials: 'same-origin' });
+            if (res.ok) sessions = await res.json();
+        } catch (e) {
+            sessions = initialData.recentSessions || [];
+        }
+
         let sessionsHtml = '';
-        if (initialData.recentSessions && initialData.recentSessions.length > 0) {
-            sessionsHtml = initialData.recentSessions.map(session => {
+        if (sessions && sessions.length > 0) {
+            sessionsHtml = sessions.map(session => {
                 let formattedDate = 'Unknown date';
                 let sessionTitle = 'Chat Conversation';
                 
@@ -1330,40 +1436,25 @@
                 const msgCount = session.messageCount || 0;
                 
                 return `
-                    <div class="session-item-full" onclick="loadChatSession('${session.id}')">
-                        <div class="session-info-full">
-                            <div class="session-title-full">${escapeHtml(sessionTitle)}</div>
-                            <div class="session-date-full">${formattedDate}</div>
-                        </div>
-                        <div class="session-badge-full">${msgCount} msgs</div>
+                    <div class="history-card" onclick="loadChatSession('${session.id}')">
+                        <div class="history-card-title">${escapeHtml(sessionTitle)}</div>
+                        <div class="history-card-meta">${formattedDate} · ${msgCount} message${msgCount === 1 ? '' : 's'}</div>
                     </div>
                 `;
             }).join('');
         } else {
             sessionsHtml = '<div class="empty-state"><i class="fas fa-comment-slash"></i><p>No conversations yet</p><p style="font-size: 0.8rem;">Start a new chat to begin.</p></div>';
         }
-        const html = `<div class="chat-history-container"><h2 style="margin-bottom: 1rem;"><i class="fas fa-history"></i> Chat History</h2><div class="session-list-full">${sessionsHtml}</div></div>`;
+        const html = `<div class="chat-history-container"><h2 style="margin-bottom: 1rem;"><i class="fas fa-history"></i> Chat History</h2><div class="history-card-grid">${sessionsHtml}</div></div>`;
         document.getElementById('dynamicContent').innerHTML = html;
     }
 
     async function loadChatSession(sessionId) {
         if (!sessionId || sessionId === 'undefined' || sessionId === 'null') {
-            document.getElementById('dynamicContent').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><h3>Invalid session</h3><p>This chat session cannot be loaded.</p></div>';
+            document.getElementById('dynamicContent').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><h3>Invalid session</h3></div>';
             return;
         }
-        
-        document.getElementById('dynamicContent').innerHTML = '<div style="text-align: center; padding: 3rem;"><i class="fas fa-spinner fa-spin"></i><p>Loading conversation...</p></div>';
-        try {
-            const response = await fetch(`/Chat?sessionId=${encodeURIComponent(sessionId)}`);
-            if (response.ok) {
-                const html = await response.text();
-                document.getElementById('dynamicContent').innerHTML = html;
-            } else {
-                throw new Error('Failed to load chat');
-            }
-        } catch (error) {
-            document.getElementById('dynamicContent').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><h3>Error loading chat</h3><p>Please try again.</p></div>';
-        }
+        await mountChatPartial('/Chat?handler=Partial&sessionId=' + encodeURIComponent(sessionId));
     }
 
     async function loadArtifacts() {
@@ -1570,18 +1661,21 @@
         }
         
         try {
-            const response = await fetch(`/Medicine?Query=${encodeURIComponent(query)}`);
-            const html = await response.text();
-            const temp = document.createElement('div');
-            temp.innerHTML = html;
-            const resultCard = temp.querySelector('.result-card, .dn-surface-card');
-            if (resultsDiv) {
-                if (resultCard) {
-                    resultsDiv.innerHTML = resultCard.outerHTML;
-                } else {
-                    resultsDiv.innerHTML = '<div class="result-card"><p>No results found. Try a different spelling or generic name.</p></div>';
-                }
+            const response = await fetch('/api/medicine/search?query=' + encodeURIComponent(query), { credentials: 'same-origin' });
+            if (response.status === 404) {
+                if (resultsDiv) resultsDiv.innerHTML = '<div class="result-card"><p>No results found. Try generic name or alternate spelling.</p></div>';
+                return;
             }
+            if (!response.ok) throw new Error('failed');
+            const data = await response.json();
+            const title = data.brandName || data.genericName || query;
+            let body = '';
+            if (data.genericName && data.brandName) body += '<p class="text-muted small">Generic: ' + escapeHtml(data.genericName) + '</p>';
+            [['Purpose', data.purpose], ['Dosage', data.dosageAndAdministration], ['Warnings', data.warnings]].forEach(function (pair) {
+                if (pair[1]) body += '<section class="mb-2"><h4>' + pair[0] + '</h4><p style="white-space:pre-wrap;font-size:0.9rem;">' + escapeHtml(String(pair[1]).slice(0, 800)) + '</p></section>';
+            });
+            if (resultsDiv) resultsDiv.innerHTML = '<article class="result-card medicine-result-card"><h3>' + escapeHtml(title) + '</h3>' + body + '</article>';
+            initialData.medicinesCount = (initialData.medicinesCount || 0) + 1;
         } catch (error) {
             if (resultsDiv) {
                 resultsDiv.innerHTML = '<div class="result-card"><p>Error searching. Please try again.</p></div>';
@@ -1630,11 +1724,16 @@
         }
     }
 
-    function searchHistoryItem(query) {
+    async function searchHistoryItem(query) {
+        currentPage = 'medicinesearch';
+        document.querySelectorAll('.nav-item, .sub-nav-item').forEach(n => n.classList.remove('active'));
+        const medItem = document.querySelector('.sub-nav-item[data-page="medicinesearch"]');
+        if (medItem) medItem.classList.add('active');
+        await loadMedicineSearch();
         const searchInput = document.getElementById('medicineQuery');
         if (searchInput) {
             searchInput.value = query;
-            searchMedicine();
+            await searchMedicine();
         }
     }
 

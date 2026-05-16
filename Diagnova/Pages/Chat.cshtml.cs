@@ -15,18 +15,35 @@ public class ChatModel : PageModel
     private readonly MongoDbService _mongoDb;
     private readonly IOpenAiChatService _ai;
     private readonly IEmergencyDetectorService _emergency;
+    private readonly EmergencyPlacesService _emergencyPlaces;
 
-    public ChatModel(MongoDbService mongoDb, IOpenAiChatService ai, IEmergencyDetectorService emergency)
+    public ChatModel(
+        MongoDbService mongoDb,
+        IOpenAiChatService ai,
+        IEmergencyDetectorService emergency,
+        EmergencyPlacesService emergencyPlaces)
     {
         _mongoDb = mongoDb;
         _ai = ai;
         _emergency = emergency;
+        _emergencyPlaces = emergencyPlaces;
     }
+
+    private bool IsDashboardEmbed() =>
+        string.Equals(
+            Request.Headers["X-Requested-With"],
+            "DiagnovaDashboard",
+            StringComparison.OrdinalIgnoreCase);
 
     public IReadOnlyList<ChatLineVm> Messages { get; private set; } = Array.Empty<ChatLineVm>();
 
+    public IReadOnlyList<ChatSessionCardVm> ChatSessions { get; private set; } = Array.Empty<ChatSessionCardVm>();
+
     [BindProperty]
     public string UserInput { get; set; } = string.Empty;
+
+    [BindProperty(SupportsGet = true)]
+    public string? SessionId { get; set; }
 
     public bool ShowEmergencyModal { get; set; }
 
@@ -34,34 +51,42 @@ public class ChatModel : PageModel
 
     public string? CurrentSessionId { get; private set; }
 
-    /// <summary>AI explanation when alarming due to profile + symptoms (not keyword-only).</summary>
     public string? AlarmingReason { get; set; }
 
     public string? SpecialistHint { get; set; }
 
-    public async Task OnGet()
+    public async Task<IActionResult> OnGetAsync(string? sessionId)
     {
-        await LoadAsync();
+        SessionId = sessionId ?? SessionId;
+        if (TempData["ShowEmergency"] is true)
+            ShowEmergencyModal = true;
+
+        await LoadAsync(SessionId);
+        return Page();
     }
 
-    // Handler for partial view loading (for SPA dashboard)
-    public async Task<IActionResult> OnGetPartialAsync()
+    public async Task<IActionResult> OnGetPartialAsync(string? sessionId)
     {
-        await LoadAsync();
+        SessionId = sessionId ?? SessionId;
+        if (TempData["ShowEmergency"] is true)
+            ShowEmergencyModal = true;
+
+        await LoadAsync(SessionId);
         return Partial("_ChatPartial", this);
     }
 
-    public async Task<IActionResult> OnPostAsync()
+    public async Task<IActionResult> OnPostAsync(string? sessionId)
     {
+        SessionId = sessionId ?? SessionId;
         var text = UserInput.Trim();
         if (string.IsNullOrEmpty(text))
         {
-            await LoadAsync();
-            return Page();
+            await LoadAsync(SessionId);
+            return IsDashboardEmbed() ? Partial("_ChatPartial", this) : Page();
         }
 
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        var session = await GetOrCreateActiveSessionAsync(userId);
+        var session = await ResolveSessionForPostAsync(userId, SessionId);
 
         var priorRows = await _mongoDb.ChatMessages
             .Find(m => m.SessionId == session.Id)
@@ -111,11 +136,7 @@ public class ChatModel : PageModel
                 Role = "assistant",
                 Content = reply,
             });
-
-            ShowEmergencyModal = true;
-            EmergencyKeywords = keywords;
-            AlarmingReason = alarmingReason;
-            SpecialistHint = specialistHint;
+            TempData["ShowEmergency"] = true;
         }
         else
         {
@@ -129,11 +150,28 @@ public class ChatModel : PageModel
         }
 
         UserInput = string.Empty;
-        await LoadAsync();
-        return Page();
+
+        if (IsDashboardEmbed())
+        {
+            if (alarming)
+            {
+                ShowEmergencyModal = true;
+                EmergencyKeywords = keywords;
+                AlarmingReason = alarmingReason;
+                SpecialistHint = specialistHint;
+            }
+
+            await LoadAsync(session.Id);
+            return Partial("_ChatPartial", this);
+        }
+
+        if (alarming)
+            TempData["ShowEmergency"] = true;
+
+        return RedirectToPage(new { sessionId = session.Id });
     }
 
-    public async Task<IActionResult> OnPostEmergencyPlacesAsync(double lat, double lng)
+    public async Task<IActionResult> OnPostEmergencyPlacesAsync(double lat, double lng, string? sessionId)
     {
         try
         {
@@ -144,13 +182,10 @@ public class ChatModel : PageModel
             if (string.IsNullOrEmpty(userId))
                 return new JsonResult(new { ok = false, error = "Not signed in." });
 
-            var session = await _mongoDb.ChatSessions
-                .Find(s => s.UserId == userId && s.ClosedAt == null)
-                .SortByDescending(s => s.StartedAt)
-                .FirstOrDefaultAsync();
-
+            SessionId = sessionId ?? SessionId;
+            var session = await ResolveActiveOrSpecifiedSessionAsync(userId, SessionId);
             if (session?.Id == null)
-                return new JsonResult(new { ok = false, error = "No active chat session." });
+                return new JsonResult(new { ok = false, error = "No chat session." });
 
             var recent = await _mongoDb.ChatMessages
                 .Find(m => m.SessionId == session.Id)
@@ -159,8 +194,7 @@ public class ChatModel : PageModel
                 .ToListAsync();
 
             var lastUser = recent.FirstOrDefault(m => string.Equals(m.Role, "user", StringComparison.OrdinalIgnoreCase));
-            if (lastUser is null || string.IsNullOrWhiteSpace(lastUser.Content))
-                return new JsonResult(new { ok = false, error = "No recent user message found." });
+            var symptomText = lastUser?.Content ?? "medical emergency";
 
             var profile = await _mongoDb.MedicalProfiles
                 .Find(p => p.UserId == userId)
@@ -168,11 +202,10 @@ public class ChatModel : PageModel
             var profileContext = BuildPatientProfileContext(profile);
 
             var facilities = await _ai.SuggestEmergencyFacilitiesAsync(
-                lat,
-                lng,
-                lastUser.Content,
-                profileContext,
-                HttpContext.RequestAborted);
+                lat, lng, symptomText, profileContext, HttpContext.RequestAborted);
+
+            if (facilities.Count == 0)
+                facilities = await _emergencyPlaces.FindNearbyHospitalsAsync(lat, lng, HttpContext.RequestAborted);
 
             return new JsonResult(new
             {
@@ -198,6 +231,19 @@ public class ChatModel : PageModel
     public async Task<IActionResult> OnPostNewChatAsync()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        await CloseOpenSessionsAsync(userId);
+
+        if (IsDashboardEmbed())
+        {
+            await LoadAsync(null);
+            return Partial("_ChatPartial", this);
+        }
+
+        return RedirectToPage();
+    }
+
+    private async Task CloseOpenSessionsAsync(string userId)
+    {
         var open = await _mongoDb.ChatSessions
             .Find(s => s.UserId == userId && s.ClosedAt == null)
             .ToListAsync();
@@ -205,22 +251,16 @@ public class ChatModel : PageModel
         foreach (var s in open)
         {
             s.ClosedAt = DateTimeOffset.UtcNow;
-            await _mongoDb.ChatSessions.ReplaceOneAsync(
-                filter: x => x.Id == s.Id,
-                replacement: s);
+            await _mongoDb.ChatSessions.ReplaceOneAsync(x => x.Id == s.Id, s);
         }
-
-        return RedirectToPage();
     }
 
-    private async Task LoadAsync()
+    private async Task LoadAsync(string? sessionId)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        var session = await _mongoDb.ChatSessions
-            .Find(s => s.UserId == userId && s.ClosedAt == null)
-            .SortByDescending(s => s.StartedAt)
-            .FirstOrDefaultAsync();
+        await LoadSessionListAsync(userId);
 
+        var session = await ResolveActiveOrSpecifiedSessionAsync(userId, sessionId);
         if (session == null || session.Id == null)
         {
             Messages = Array.Empty<ChatLineVm>();
@@ -237,6 +277,72 @@ public class ChatModel : PageModel
         Messages = messages.Select(m => new ChatLineVm(m.Role, m.Content)).ToList();
     }
 
+    private async Task LoadSessionListAsync(string userId)
+    {
+        var sessions = await _mongoDb.ChatSessions
+            .Find(s => s.UserId == userId)
+            .SortByDescending(s => s.StartedAt)
+            .ToListAsync();
+
+        var cards = new List<ChatSessionCardVm>();
+        foreach (var session in sessions)
+        {
+            var messages = await _mongoDb.ChatMessages
+                .Find(m => m.SessionId == session.Id)
+                .SortBy(m => m.CreatedAt)
+                .ToListAsync();
+
+            var firstUser = messages.FirstOrDefault(m => m.Role == "user");
+            var title = firstUser != null
+                ? (firstUser.Content.Length > 48 ? firstUser.Content[..48] + "…" : firstUser.Content)
+                : "New conversation";
+
+            cards.Add(new ChatSessionCardVm(
+                session.Id ?? string.Empty,
+                title,
+                session.StartedAt,
+                messages.Count));
+        }
+
+        ChatSessions = cards;
+    }
+
+    private async Task<MongoChatSession> ResolveSessionForPostAsync(string userId, string? sessionId)
+    {
+        if (!string.IsNullOrEmpty(sessionId))
+        {
+            var existing = await _mongoDb.ChatSessions
+                .Find(s => s.Id == sessionId && s.UserId == userId)
+                .FirstOrDefaultAsync();
+            if (existing != null)
+            {
+                if (existing.ClosedAt != null)
+                {
+                    existing.ClosedAt = null;
+                    await _mongoDb.ChatSessions.ReplaceOneAsync(s => s.Id == existing.Id, existing);
+                }
+                return existing;
+            }
+        }
+
+        return await GetOrCreateActiveSessionAsync(userId);
+    }
+
+    private async Task<MongoChatSession?> ResolveActiveOrSpecifiedSessionAsync(string userId, string? sessionId)
+    {
+        if (!string.IsNullOrEmpty(sessionId))
+        {
+            return await _mongoDb.ChatSessions
+                .Find(s => s.Id == sessionId && s.UserId == userId)
+                .FirstOrDefaultAsync();
+        }
+
+        return await _mongoDb.ChatSessions
+            .Find(s => s.UserId == userId && s.ClosedAt == null)
+            .SortByDescending(s => s.StartedAt)
+            .FirstOrDefaultAsync();
+    }
+
     private async Task<MongoChatSession> GetOrCreateActiveSessionAsync(string userId)
     {
         var open = await _mongoDb.ChatSessions
@@ -251,7 +357,6 @@ public class ChatModel : PageModel
         return open;
     }
 
-    /// <summary>Formats MongoDB medical profile for the model (no email/phone/security fields).</summary>
     private static string? BuildPatientProfileContext(MedicalProfile? profile)
     {
         if (profile is null)
@@ -310,11 +415,13 @@ public class ChatModel : PageModel
         sb.AppendLine();
         sb.AppendLine("**Call emergency services immediately** if you are in danger, feel faint, have trouble breathing, or symptoms are severe.");
         sb.AppendLine();
-        sb.AppendLine("**Pakistan helplines (examples):** **1122** (Rescue / emergency services), **115** (Edhi Ambulance), **1166** (health helpline). Use the official local number for your city if different.");
+        sb.AppendLine("**Pakistan helplines (examples):** **1122** (Rescue / emergency services), **115** (Edhi Ambulance), **1166** (health helpline).");
         sb.AppendLine();
-        sb.AppendLine("Diagnova is not a substitute for emergency care. In the popup you can share your **approximate location** to see **AI-suggested** nearby facilities on a map — **verify by phone or official maps** before traveling.");
+        sb.AppendLine("Diagnova is not a substitute for emergency care. Share your **approximate location** in the popup for nearby facility suggestions — **verify by phone or official maps** before traveling.");
         return sb.ToString().TrimEnd();
     }
 }
 
 public sealed record ChatLineVm(string Role, string Content);
+
+public sealed record ChatSessionCardVm(string Id, string Title, DateTimeOffset StartedAt, int MessageCount);
