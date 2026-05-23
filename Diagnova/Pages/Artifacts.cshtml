@@ -348,7 +348,7 @@
                 </div>
             </div>
 
-            <!-- Emergency Contact Card -->
+            <!-- Emergency Contact Card - UPDATED to use Email -->
             <div class="artifact-card">
                 <div class="card-header">
                     <i class="fas fa-shield-alt"></i>
@@ -360,8 +360,8 @@
                         <span class="info-value">@(string.IsNullOrEmpty(Model.UserProfile.EmergencyContactName) ? "Not set" : Model.UserProfile.EmergencyContactName)</span>
                     </div>
                     <div class="info-row">
-                        <span class="info-label">Contact Phone</span>
-                        <span class="info-value">@(string.IsNullOrEmpty(Model.UserProfile.EmergencyContactPhone) ? "Not set" : Model.UserProfile.EmergencyContactPhone)</span>
+                        <span class="info-label">Contact Email</span>
+                        <span class="info-value">@(string.IsNullOrEmpty(Model.UserProfile.EmergencyContactEmail) ? "Not set" : Model.UserProfile.EmergencyContactEmail)</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Country</span>

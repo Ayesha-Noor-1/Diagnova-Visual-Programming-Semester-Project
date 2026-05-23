@@ -395,6 +395,25 @@
         border-color: #e74c3c;
     }
 
+    /* Availability Check Styles */
+    .availability-checking {
+        font-size: 0.65rem;
+        color: #f39c12;
+        margin-top: 2px;
+    }
+
+    .availability-available {
+        font-size: 0.65rem;
+        color: #27ae60;
+        margin-top: 2px;
+    }
+
+    .availability-taken {
+        font-size: 0.65rem;
+        color: #e74c3c;
+        margin-top: 2px;
+    }
+
     /* Password strength indicator */
     .password-strength {
         margin-top: 0.2rem;
@@ -633,6 +652,16 @@
         display: none;
     }
 
+    .valid-icon {
+        color: #27ae60;
+        margin-left: 5px;
+    }
+
+    .invalid-icon {
+        color: #e74c3c;
+        margin-left: 5px;
+    }
+
     @@media (max-width: 900px) {
         .steps-sidebar {
             display: none;
@@ -749,17 +778,19 @@
                             <label class="form-label">Username <span class="required">*</span></label>
                             <div class="input-wrapper">
                                 <i class="fas fa-at"></i>
-                                <input asp-for="Input.Username" class="form-control" placeholder="@@username" data-required="true" />
+                                <input asp-for="Input.Username" class="form-control" id="username" placeholder="@@username" data-required="true" />
                             </div>
                             <span asp-validation-for="Input.Username" class="error-message"></span>
+                            <div id="usernameAvailability" class="availability-checking">Checking availability...</div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Email Address <span class="required">*</span></label>
                             <div class="input-wrapper">
                                 <i class="fas fa-envelope"></i>
-                                <input asp-for="Input.Email" class="form-control" placeholder="hello@example.com" data-required="true" />
+                                <input asp-for="Input.Email" class="form-control" id="email" placeholder="hello@example.com" data-required="true" />
                             </div>
                             <span asp-validation-for="Input.Email" class="error-message"></span>
+                            <div id="emailAvailability" class="availability-checking">Checking availability...</div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Date of Birth <span class="required">*</span></label>
@@ -1030,6 +1061,7 @@
                                 <i class="fas fa-envelope"></i>
                                 <input asp-for="Input.EmergencyContactEmail" type="email" class="form-control" placeholder="emergency@example.com" />
                             </div>
+                            <div class="hint-text">This email will receive alerts during medical emergencies</div>
                         </div>
                         <div class="form-group full-width">
                             <label class="form-label">Country / Region</label>
@@ -1039,29 +1071,19 @@
                             </div>
                             <div class="hint-text">Used for localized recommendations</div>
                         </div>
-                        <div class="form-group full-width">
-                            <label class="form-label">Recovery Method</label>
-                            <div class="input-wrapper">
-                                <i class="fas fa-shield-alt"></i>
-                                <select asp-for="Input.RecoveryMethod" class="form-control" id="recoveryMethod">
-                                    <option value="email">Email OTP</option>
-                                    <option value="phone">Phone OTP</option>
-                                    <option value="question">Security Question</option>
-                                </select>
-                            </div>
-                        </div>
                         <div class="form-group full-width security-question-area" id="securityQuestionArea">
-                            <label class="form-label">Security Question</label>
+                            <label class="form-label">Security Question (Optional)</label>
                             <div class="input-wrapper">
                                 <i class="fas fa-question-circle"></i>
                                 <input asp-for="Input.SecurityQuestion" class="form-control" placeholder="e.g., What was your first pet's name?" />
                             </div>
                             <div class="form-group" style="margin-top: 0.5rem;">
-                                <label class="form-label">Security Answer</label>
+                                <label class="form-label">Security Answer (Optional)</label>
                                 <div class="input-wrapper">
                                     <i class="fas fa-key"></i>
                                     <input asp-for="Input.SecurityAnswer" class="form-control" placeholder="Your answer" />
                                 </div>
+
                             </div>
                         </div>
                     </div>
@@ -1076,6 +1098,8 @@
     const totalSteps = 5;
     const forms = document.querySelectorAll('.form-step');
     const stepItems = document.querySelectorAll('.step-item');
+    let usernameCheckTimeout;
+    let emailCheckTimeout;
 
     class MultiSelectManager {
         constructor(containerId, hiddenFieldId, tagsContainerId) {
@@ -1130,6 +1154,91 @@
     function addCustomCondition(type) { const input = document.getElementById(type === 'conditions' ? 'customConditionInput' : 'customAllergyInput'); const value = input.value.trim(); if (value) { window.multiSelects[type].addCustomValue(value); input.value = ''; } }
     window.addCustomCondition = addCustomCondition;
     
+    // Username availability check
+    const usernameInput = document.getElementById('username');
+    const usernameAvailabilityDiv = document.getElementById('usernameAvailability');
+    
+    async function checkUsernameAvailability() {
+        const username = usernameInput?.value.trim();
+        if (!username || username.length < 3) {
+            usernameAvailabilityDiv.innerHTML = '<i class="fas fa-info-circle"></i> Username must be at least 3 characters';
+            usernameAvailabilityDiv.className = 'availability-checking';
+            return false;
+        }
+        
+        usernameAvailabilityDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Checking availability...';
+        usernameAvailabilityDiv.className = 'availability-checking';
+        
+        try {
+            const response = await fetch(`/api/check-username?username=${encodeURIComponent(username)}`);
+            const data = await response.json();
+            
+            if (data.available) {
+                usernameAvailabilityDiv.innerHTML = '<i class="fas fa-check-circle"></i> Username is available!';
+                usernameAvailabilityDiv.className = 'availability-available';
+                return true;
+            } else {
+                usernameAvailabilityDiv.innerHTML = '<i class="fas fa-times-circle"></i> Username is already taken';
+                usernameAvailabilityDiv.className = 'availability-taken';
+                return false;
+            }
+        } catch (error) {
+            usernameAvailabilityDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error checking username';
+            usernameAvailabilityDiv.className = 'availability-checking';
+            return false;
+        }
+    }
+    
+    // Email availability check
+    const emailInput = document.getElementById('email');
+    const emailAvailabilityDiv = document.getElementById('emailAvailability');
+    
+    async function checkEmailAvailability() {
+        const email = emailInput?.value.trim();
+        if (!email || !email.includes('@@')) {
+            emailAvailabilityDiv.innerHTML = '<i class="fas fa-info-circle"></i> Enter a valid email address';
+            emailAvailabilityDiv.className = 'availability-checking';
+            return false;
+        }
+        
+        emailAvailabilityDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Checking availability...';
+        emailAvailabilityDiv.className = 'availability-checking';
+        
+        try {
+            const response = await fetch(`/api/check-email?email=${encodeURIComponent(email)}`);
+            const data = await response.json();
+            
+            if (data.available) {
+                emailAvailabilityDiv.innerHTML = '<i class="fas fa-check-circle"></i> Email is available!';
+                emailAvailabilityDiv.className = 'availability-available';
+                return true;
+            } else {
+                emailAvailabilityDiv.innerHTML = '<i class="fas fa-times-circle"></i> Email is already registered';
+                emailAvailabilityDiv.className = 'availability-taken';
+                return false;
+            }
+        } catch (error) {
+            emailAvailabilityDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error checking email';
+            emailAvailabilityDiv.className = 'availability-checking';
+            return false;
+        }
+    }
+    
+    // Debounced checks
+    if (usernameInput) {
+        usernameInput.addEventListener('input', () => {
+            clearTimeout(usernameCheckTimeout);
+            usernameCheckTimeout = setTimeout(checkUsernameAvailability, 500);
+        });
+    }
+    
+    if (emailInput) {
+        emailInput.addEventListener('input', () => {
+            clearTimeout(emailCheckTimeout);
+            emailCheckTimeout = setTimeout(checkEmailAvailability, 500);
+        });
+    }
+    
     // Password strength
     const passwordInput = document.getElementById('password');
     const confirmPasswordInput = document.getElementById('confirmPassword');
@@ -1178,7 +1287,14 @@
         const requiredFields = currentForm.querySelectorAll('[data-required="true"]');
         let isValid = true;
         requiredFields.forEach(field => { if (!field.value || field.value.trim() === '') { field.classList.add('error'); isValid = false; } else { field.classList.remove('error'); } });
-        if (currentStep === 0) { const password = passwordInput?.value || ''; const confirmPassword = confirmPasswordInput?.value || ''; if (password !== confirmPassword) { if (confirmPasswordInput) confirmPasswordInput.classList.add('error'); isValid = false; } }
+        if (currentStep === 0) { 
+            const password = passwordInput?.value || ''; 
+            const confirmPassword = confirmPasswordInput?.value || ''; 
+            if (password !== confirmPassword) { 
+                if (confirmPasswordInput) confirmPasswordInput.classList.add('error'); 
+                isValid = false; 
+            }
+        }
         if (!isValid) { const firstError = currentForm.querySelector('.error'); if (firstError) firstError.focus(); }
         return isValid;
     }
@@ -1196,10 +1312,9 @@
     }
     if (weightInput && heightInput) { weightInput.addEventListener('input', calculateBMI); heightInput.addEventListener('input', calculateBMI); calculateBMI(); }
     
-    // Security question toggle
-    const recoveryMethod = document.getElementById('recoveryMethod');
+    // Security question toggle (removed recovery method since we only use email OTP)
     const securityArea = document.getElementById('securityQuestionArea');
-    if (recoveryMethod && securityArea) { function toggleSecurityQuestion() { securityArea.style.display = recoveryMethod.value === 'question' ? 'block' : 'none'; } recoveryMethod.addEventListener('change', toggleSecurityQuestion); toggleSecurityQuestion(); }
+    if (securityArea) { securityArea.style.display = 'block'; }
     
     // Navigation
     document.getElementById('nextBtn1')?.addEventListener('click', () => { if (validateCurrentStep() && currentStep < totalSteps - 1) { currentStep++; updateUI(); } });
@@ -1210,7 +1325,18 @@
     document.getElementById('prevBtn3')?.addEventListener('click', () => { if (currentStep > 0) { currentStep--; updateUI(); } });
     document.getElementById('prevBtn4')?.addEventListener('click', () => { if (currentStep > 0) { currentStep--; updateUI(); } });
     document.getElementById('prevBtn5')?.addEventListener('click', () => { if (currentStep > 0) { currentStep--; updateUI(); } });
-    document.getElementById('submitBtn')?.addEventListener('click', (e) => { e.preventDefault(); if (validateCurrentStep()) { document.getElementById('registerForm').submit(); } });
+    document.getElementById('submitBtn')?.addEventListener('click', async (e) => { 
+        e.preventDefault(); 
+        // Check username and email availability before submitting
+        const isUsernameAvailable = await checkUsernameAvailability();
+        const isEmailAvailable = await checkEmailAvailability();
+        
+        if (validateCurrentStep() && isUsernameAvailable && isEmailAvailable) { 
+            document.getElementById('registerForm').submit(); 
+        } else {
+            alert('Please fix the errors above before submitting.');
+        }
+    });
     
     document.querySelectorAll('.form-control').forEach(field => { field.addEventListener('input', () => field.classList.remove('error')); });
     updateUI();

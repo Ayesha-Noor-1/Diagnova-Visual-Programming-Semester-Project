@@ -16,17 +16,20 @@ public class ChatModel : PageModel
     private readonly IOpenAiChatService _ai;
     private readonly IEmergencyDetectorService _emergency;
     private readonly EmergencyPlacesService _emergencyPlaces;
+    private readonly IEmailService _emailService;
 
     public ChatModel(
         MongoDbService mongoDb,
         IOpenAiChatService ai,
         IEmergencyDetectorService emergency,
-        EmergencyPlacesService emergencyPlaces)
+        EmergencyPlacesService emergencyPlaces,
+        IEmailService emailService)
     {
         _mongoDb = mongoDb;
         _ai = ai;
         _emergency = emergency;
         _emergencyPlaces = emergencyPlaces;
+        _emailService = emailService;
     }
 
     private bool IsDashboardEmbed() =>
@@ -129,6 +132,9 @@ public class ChatModel : PageModel
 
         if (alarming)
         {
+            // SEND EMAIL TO EMERGENCY CONTACT
+            await SendEmergencyEmailAsync(userId, text, keywords, alarmingReason);
+
             var reply = BuildEmergencyReply(keywords, alarmingReason, specialistHint);
             await _mongoDb.ChatMessages.InsertOneAsync(new MongoChatMessage
             {
@@ -169,6 +175,54 @@ public class ChatModel : PageModel
             TempData["ShowEmergency"] = true;
 
         return RedirectToPage(new { sessionId = session.Id });
+    }
+
+    // EMAIL SENDING METHOD - FIXED to use EmergencyContactEmail
+    private async Task SendEmergencyEmailAsync(string userId, string userMessage, List<string> keywords, string? alarmingReason = null)
+    {
+        try
+        {
+            Console.WriteLine("=== SENDING EMERGENCY EMAIL ===");
+
+            var profile = await _mongoDb.MedicalProfiles
+                .Find(p => p.UserId == userId)
+                .FirstOrDefaultAsync();
+
+            if (profile == null)
+            {
+                Console.WriteLine("Profile not found for user: " + userId);
+                return;
+            }
+
+            Console.WriteLine($"Profile found: {profile.FullName}");
+            Console.WriteLine($"Emergency Contact Email: {profile.EmergencyContactEmail}");  // FIXED: Using Email field
+            Console.WriteLine($"Emergency Contact Name: {profile.EmergencyContactName}");
+
+            if (string.IsNullOrEmpty(profile.EmergencyContactEmail))  // FIXED: Using Email field
+            {
+                Console.WriteLine("WARNING: No emergency contact email found in profile!");
+                return;
+            }
+
+            var success = await _emailService.SendEmergencyAlertAsync(
+                profile.EmergencyContactEmail,  // FIXED: Using Email field, not Phone
+                profile.EmergencyContactName ?? "Emergency Contact",
+                profile.FullName,
+                userMessage,
+                keywords,
+                alarmingReason
+            );
+
+            if (success)
+                Console.WriteLine("Email sent successfully!");
+            else
+                Console.WriteLine("Email sending failed!");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"ERROR sending email: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+        }
     }
 
     public async Task<IActionResult> OnPostEmergencyPlacesAsync(double lat, double lng, string? sessionId)
@@ -419,6 +473,39 @@ public class ChatModel : PageModel
         sb.AppendLine();
         sb.AppendLine("Diagnova is not a substitute for emergency care. Share your **approximate location** in the popup for nearby facility suggestions — **verify by phone or official maps** before traveling.");
         return sb.ToString().TrimEnd();
+    }
+
+    // TEST ENDPOINT - To test email directly
+    public async Task<IActionResult> OnGetTestEmail()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Content("User not logged in");
+        }
+
+        Console.WriteLine("=== TEST EMAIL TRIGGERED ===");
+
+        var profile = await _mongoDb.MedicalProfiles
+            .Find(p => p.UserId == userId)
+            .FirstOrDefaultAsync();
+
+        if (profile == null)
+        {
+            return Content("Profile not found");
+        }
+
+        Console.WriteLine($"Profile Email: {profile.EmergencyContactEmail}");  // FIXED
+        Console.WriteLine($"Profile Name: {profile.EmergencyContactName}");
+
+        await SendEmergencyEmailAsync(
+            userId,
+            "This is a TEST emergency message",
+            new List<string> { "test" },
+            "Test reason"
+        );
+
+        return Content("Email test completed. Check console for details.");
     }
 }
 

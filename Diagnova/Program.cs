@@ -103,6 +103,9 @@ builder.Services.AddHttpClient<IOpenFdaService, OpenFdaService>();
 builder.Services.AddHttpClient<EmergencyPlacesService>();
 builder.Services.AddSingleton<IEmergencyDetectorService, EmergencyDetectorService>();
 
+// Email Service for emergency alerts
+builder.Services.AddTransient<IEmailService, EmailService>();
+
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
@@ -388,8 +391,8 @@ app.MapPost("/api/profile/update", async (MongoDbService mongoDb, ClaimsPrincipa
         case "emergencycontactname":
             profile.EmergencyContactName = request.Value ?? string.Empty;
             break;
-        case "emergencycontactphone":
-            profile.EmergencyContactPhone = request.Value ?? string.Empty;
+        case "emergencycontactemail":
+            profile.EmergencyContactEmail = request.Value ?? string.Empty;
             break;
         case "preexistingconditions":
             profile.PreExistingConditions = request.Value?.Split(',').Select(s => s.Trim()).ToList() ?? new List<string>();
@@ -406,6 +409,49 @@ app.MapPost("/api/profile/update", async (MongoDbService mongoDb, ClaimsPrincipa
     return Results.Ok(new { success = true });
 }).RequireAuthorization();
 
+// Emergency Email API endpoint
+app.MapPost("/api/emergency/send-email", async (MongoDbService mongoDb, IEmailService emailService, ClaimsPrincipal user, EmergencyEmailRequest request) =>
+{
+    var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+    if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+
+    var profile = await mongoDb.MedicalProfiles.Find(p => p.UserId == userId).FirstOrDefaultAsync();
+    if (profile == null) return Results.NotFound(new { error = "Profile not found" });
+
+    if (string.IsNullOrEmpty(profile.EmergencyContactEmail))
+        return Results.BadRequest(new { error = "No emergency contact email configured" });
+
+    var success = await emailService.SendEmergencyAlertAsync(
+        profile.EmergencyContactEmail,
+        profile.EmergencyContactName ?? "Emergency Contact",
+        profile.FullName,
+        request.Message,
+        request.Keywords ?? new List<string>(),
+        request.AlarmingReason
+    );
+
+    return Results.Ok(new { success = success });
+}).RequireAuthorization();
+
+// ===== ADD THESE TWO ENDPOINTS FOR REGISTRATION AVAILABILITY CHECKS =====
+app.MapGet("/api/check-username", async (string username, UserManager<ApplicationUser> userManager) =>
+{
+    if (string.IsNullOrWhiteSpace(username))
+        return Results.Ok(new { available = false });
+
+    var existing = await userManager.FindByNameAsync(username.Trim());
+    return Results.Ok(new { available = existing == null });
+});
+
+app.MapGet("/api/check-email", async (string email, UserManager<ApplicationUser> userManager) =>
+{
+    if (string.IsNullOrWhiteSpace(email))
+        return Results.Ok(new { available = false });
+
+    var existing = await userManager.FindByEmailAsync(email.Trim());
+    return Results.Ok(new { available = existing == null });
+});
+
 app.MapStaticAssets();
 app.MapRazorPages()
     .WithStaticAssets();
@@ -419,9 +465,8 @@ using (var scope = app.Services.CreateScope())
 
 app.Run();
 
+// Record types for API endpoints
 public record UpdateProfileRequest(string Field, string? Value);
-
-// Request/Record types for API endpoints
 public record CreateVitalRequest(string Name, string Unit);
 public record AddReadingRequest(string VitalId, double Value, string? Note);
-
+public record EmergencyEmailRequest(string Message, List<string>? Keywords, string? AlarmingReason);

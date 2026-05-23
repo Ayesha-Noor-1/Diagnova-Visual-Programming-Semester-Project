@@ -72,7 +72,7 @@ public class ArtifactsModel : PageModel
             case "activitylevel": profile.ActivityLevel = request.Value; break;
             case "dailycalorietarget": profile.DailyCalorieTarget = int.TryParse(request.Value, out var c) ? c : profile.DailyCalorieTarget; break;
             case "emergencycontactname": profile.EmergencyContactName = request.Value; break;
-            case "emergencycontactphone": profile.EmergencyContactPhone = request.Value; break;
+            case "emergencycontactemail": profile.EmergencyContactEmail = request.Value; break;
             case "countryregion": profile.CountryRegion = request.Value; break;
             case "recoverymethod": profile.RecoveryMethod = request.Value; break;
             default: break;

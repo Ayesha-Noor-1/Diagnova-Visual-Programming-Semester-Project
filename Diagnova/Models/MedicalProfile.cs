@@ -41,8 +41,9 @@ public class MedicalProfile
     public int? DailyCalorieTarget { get; set; }
 
     // Emergency & Contact Info
+    // Emergency & Contact Info
     public string EmergencyContactName { get; set; } = string.Empty;
-    public string EmergencyContactPhone { get; set; } = string.Empty;
+    public string EmergencyContactEmail { get; set; } = string.Empty;  // ← Changed to Email
     public string CountryRegion { get; set; } = string.Empty;
 
     // Security
