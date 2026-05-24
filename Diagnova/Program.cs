@@ -52,9 +52,20 @@ builder.Configuration.AddUserSecrets(typeof(AppDbContext).Assembly, optional: tr
 // Lets MapStaticAssets / library bundles resolve when not running from `dotnet publish` output (e.g. Production env + dotnet run).
 builder.WebHost.UseStaticWebAssets();
 
-// SQL Server for Identity/Auth
+// SQL Server for Identity/Auth (appsettings.json is gitignored — copy from appsettings.example.json)
+const string DefaultSqlServerConnection =
+    "Server=(localdb)\\mssqllocaldb;Database=DiagnovaAuth;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
+
+static string ResolveSqlServerConnection(IConfiguration config)
+{
+    var cs = config.GetConnectionString("SqlServerConnection");
+    return string.IsNullOrWhiteSpace(cs) ? DefaultSqlServerConnection : cs.Trim();
+}
+
+var sqlServerConnection = ResolveSqlServerConnection(builder.Configuration);
+
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("SqlServerConnection")));
+    options.UseSqlServer(sqlServerConnection));
 
 // MongoDB settings
 builder.Services.Configure<MongoDbSettings>(options =>
@@ -105,6 +116,8 @@ builder.Services.AddSingleton<IEmergencyDetectorService, EmergencyDetectorServic
 
 // Email Service for emergency alerts
 builder.Services.AddTransient<IEmailService, EmailService>();
+builder.Services.AddScoped<SosAlertService>();
+builder.Services.AddScoped<DailyTipService>();
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
@@ -113,6 +126,12 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 });
 
 var app = builder.Build();
+
+if (string.IsNullOrWhiteSpace(app.Configuration.GetConnectionString("SqlServerConnection")))
+{
+    app.Logger.LogWarning(
+        "ConnectionStrings:SqlServerConnection is missing. Using LocalDB default. Copy appsettings.example.json to appsettings.json for full config.");
+}
 
 {
     var open = app.Configuration.GetSection(OpenAiOptions.SectionName);
@@ -304,6 +323,15 @@ app.MapGet("/api/chat/sessions", async (MongoDbService mongoDb, ClaimsPrincipal 
     return Results.Ok(list);
 }).RequireAuthorization();
 
+app.MapGet("/api/tips/daily", async (DailyTipService tips, ClaimsPrincipal user, CancellationToken ct) =>
+{
+    var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+    if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+
+    var tip = await tips.GetTodayTipAsync(userId, ct);
+    return Results.Ok(tip);
+}).RequireAuthorization();
+
 app.MapGet("/api/dashboard/activity", async (MongoDbService mongoDb, ClaimsPrincipal user) =>
 {
     var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -394,6 +422,9 @@ app.MapPost("/api/profile/update", async (MongoDbService mongoDb, ClaimsPrincipa
         case "emergencycontactemail":
             profile.EmergencyContactEmail = request.Value ?? string.Empty;
             break;
+        case "emergencycontactphone":
+            profile.EmergencyContactPhone = request.Value ?? string.Empty;
+            break;
         case "preexistingconditions":
             profile.PreExistingConditions = request.Value?.Split(',').Select(s => s.Trim()).ToList() ?? new List<string>();
             break;
@@ -407,6 +438,25 @@ app.MapPost("/api/profile/update", async (MongoDbService mongoDb, ClaimsPrincipa
     profile.UpdatedAt = DateTime.UtcNow;
     await mongoDb.MedicalProfiles.ReplaceOneAsync(p => p.Id == profile.Id, profile);
     return Results.Ok(new { success = true });
+}).RequireAuthorization();
+
+// One-tap SOS — location + medical profile to emergency contacts
+app.MapPost("/api/sos/trigger", async (SosAlertService sos, ClaimsPrincipal user, SosTriggerRequest request, CancellationToken ct) =>
+{
+    var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+    if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+
+    var result = await sos.TriggerAsync(
+        userId,
+        request.Latitude,
+        request.Longitude,
+        string.IsNullOrWhiteSpace(request.Note) ? "One-tap SOS — user needs immediate help." : request.Note.Trim(),
+        ct);
+
+    if (!result.Ok)
+        return Results.BadRequest(result);
+
+    return Results.Ok(result);
 }).RequireAuthorization();
 
 // Emergency Email API endpoint

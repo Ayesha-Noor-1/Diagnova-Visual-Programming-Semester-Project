@@ -31,6 +31,9 @@ public class MongoDbService
 
     public IMongoCollection<MongoMedicineSearch> MedicineSearchHistory =>
         _database.GetCollection<MongoMedicineSearch>("MedicineSearchHistory");
+
+    public IMongoCollection<DailyHealthTip> DailyHealthTips =>
+        _database.GetCollection<DailyHealthTip>("DailyHealthTips");
 }
 
 public class MongoDbSettings

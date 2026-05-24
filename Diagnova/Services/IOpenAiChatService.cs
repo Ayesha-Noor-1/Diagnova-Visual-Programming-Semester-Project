@@ -24,6 +24,20 @@ public interface IOpenAiChatService
         string symptomMessage,
         string? patientProfileContext,
         CancellationToken cancellationToken = default);
+
+    /// <summary>One condition-specific daily tip (diet, exercise, or lifestyle).</summary>
+    Task<DailyTipGeneration?> GenerateDailyConditionTipAsync(
+        IReadOnlyList<string> conditions,
+        string category,
+        string? patientProfileContext,
+        CancellationToken cancellationToken = default);
+}
+
+public sealed class DailyTipGeneration
+{
+    public string Title { get; set; } = string.Empty;
+    public string Body { get; set; } = string.Empty;
+    public string Category { get; set; } = string.Empty;
 }
 
 public sealed record ChatTurn(string Role, string Content);

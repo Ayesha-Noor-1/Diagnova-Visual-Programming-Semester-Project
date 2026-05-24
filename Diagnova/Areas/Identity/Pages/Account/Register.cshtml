@@ -752,6 +752,7 @@
         <!-- Right Side Form -->
         <div class="form-container">
             <div asp-validation-summary="ModelOnly" class="alert alert-danger small mb-2"></div>
+            <div id="formErrorBanner" class="alert alert-danger small mb-2 d-none" role="alert"></div>
 
             <form id="registerForm" method="post">
 
@@ -781,7 +782,7 @@
                                 <input asp-for="Input.Username" class="form-control" id="username" placeholder="@@username" data-required="true" />
                             </div>
                             <span asp-validation-for="Input.Username" class="error-message"></span>
-                            <div id="usernameAvailability" class="availability-checking">Checking availability...</div>
+                            <div id="usernameAvailability" class="availability-checking">Enter at least 3 characters to check availability</div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Email Address <span class="required">*</span></label>
@@ -790,7 +791,7 @@
                                 <input asp-for="Input.Email" class="form-control" id="email" placeholder="hello@example.com" data-required="true" />
                             </div>
                             <span asp-validation-for="Input.Email" class="error-message"></span>
-                            <div id="emailAvailability" class="availability-checking">Checking availability...</div>
+                            <div id="emailAvailability" class="availability-checking">Enter your email to check availability</div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Date of Birth <span class="required">*</span></label>
@@ -1064,6 +1065,14 @@
                             <div class="hint-text">This email will receive alerts during medical emergencies</div>
                         </div>
                         <div class="form-group full-width">
+                            <label class="form-label">Emergency contact phone (optional)</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-phone"></i>
+                                <input asp-for="Input.EmergencyContactPhone" type="tel" class="form-control" placeholder="+92 300 1234567" />
+                            </div>
+                            <div class="hint-text">Enables one-tap SOS via SMS on supported devices</div>
+                        </div>
+                        <div class="form-group full-width">
                             <label class="form-label">Country / Region</label>
                             <div class="input-wrapper">
                                 <i class="fas fa-globe"></i>
@@ -1158,6 +1167,23 @@
     const usernameInput = document.getElementById('username');
     const usernameAvailabilityDiv = document.getElementById('usernameAvailability');
     
+    function isValidEmailFormat(email) {
+        return /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/.test(email);
+    }
+
+    function showFormError(message) {
+        const banner = document.getElementById('formErrorBanner');
+        if (!banner) return;
+        if (!message) {
+            banner.classList.add('d-none');
+            banner.textContent = '';
+            return;
+        }
+        banner.textContent = message;
+        banner.classList.remove('d-none');
+        banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
     async function checkUsernameAvailability() {
         const username = usernameInput?.value.trim();
         if (!username || username.length < 3) {
@@ -1171,19 +1197,21 @@
         
         try {
             const response = await fetch(`/api/check-username?username=${encodeURIComponent(username)}`);
+            if (!response.ok) throw new Error('HTTP ' + response.status);
             const data = await response.json();
+            const available = data.available === true || data.Available === true;
             
-            if (data.available) {
+            if (available) {
                 usernameAvailabilityDiv.innerHTML = '<i class="fas fa-check-circle"></i> Username is available!';
                 usernameAvailabilityDiv.className = 'availability-available';
                 return true;
             } else {
-                usernameAvailabilityDiv.innerHTML = '<i class="fas fa-times-circle"></i> Username is already taken';
+                usernameAvailabilityDiv.innerHTML = '<i class="fas fa-times-circle"></i> Username is already taken — choose another';
                 usernameAvailabilityDiv.className = 'availability-taken';
                 return false;
             }
         } catch (error) {
-            usernameAvailabilityDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error checking username';
+            usernameAvailabilityDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Could not verify username — try again';
             usernameAvailabilityDiv.className = 'availability-checking';
             return false;
         }
@@ -1195,7 +1223,7 @@
     
     async function checkEmailAvailability() {
         const email = emailInput?.value.trim();
-        if (!email || !email.includes('@@')) {
+        if (!email || !isValidEmailFormat(email)) {
             emailAvailabilityDiv.innerHTML = '<i class="fas fa-info-circle"></i> Enter a valid email address';
             emailAvailabilityDiv.className = 'availability-checking';
             return false;
@@ -1206,19 +1234,21 @@
         
         try {
             const response = await fetch(`/api/check-email?email=${encodeURIComponent(email)}`);
+            if (!response.ok) throw new Error('HTTP ' + response.status);
             const data = await response.json();
+            const available = data.available === true || data.Available === true;
             
-            if (data.available) {
+            if (available) {
                 emailAvailabilityDiv.innerHTML = '<i class="fas fa-check-circle"></i> Email is available!';
                 emailAvailabilityDiv.className = 'availability-available';
                 return true;
             } else {
-                emailAvailabilityDiv.innerHTML = '<i class="fas fa-times-circle"></i> Email is already registered';
+                emailAvailabilityDiv.innerHTML = '<i class="fas fa-times-circle"></i> Email is already registered — <a href="/Identity/Account/Login">sign in</a> or use another email';
                 emailAvailabilityDiv.className = 'availability-taken';
                 return false;
             }
         } catch (error) {
-            emailAvailabilityDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error checking email';
+            emailAvailabilityDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Could not verify email — try again';
             emailAvailabilityDiv.className = 'availability-checking';
             return false;
         }
@@ -1282,21 +1312,68 @@
         document.querySelector('.form-container').scrollTop = 0;
     }
     
-    function validateCurrentStep() {
-        const currentForm = forms[currentStep];
-        const requiredFields = currentForm.querySelectorAll('[data-required="true"]');
+    function validateStep(stepIndex) {
+        const form = forms[stepIndex];
+        if (!form) return true;
+        const requiredFields = form.querySelectorAll('[data-required="true"]');
         let isValid = true;
-        requiredFields.forEach(field => { if (!field.value || field.value.trim() === '') { field.classList.add('error'); isValid = false; } else { field.classList.remove('error'); } });
-        if (currentStep === 0) { 
-            const password = passwordInput?.value || ''; 
-            const confirmPassword = confirmPasswordInput?.value || ''; 
-            if (password !== confirmPassword) { 
-                if (confirmPasswordInput) confirmPasswordInput.classList.add('error'); 
-                isValid = false; 
+        requiredFields.forEach(field => {
+            const empty = !field.value || String(field.value).trim() === '';
+            if (empty) {
+                field.classList.add('error');
+                isValid = false;
+            } else {
+                field.classList.remove('error');
+            }
+        });
+        if (stepIndex === 0) {
+            const password = passwordInput?.value || '';
+            const confirmPassword = confirmPasswordInput?.value || '';
+            if (password.length < 6) {
+                if (passwordInput) passwordInput.classList.add('error');
+                isValid = false;
+            }
+            if (password !== confirmPassword) {
+                if (confirmPasswordInput) confirmPasswordInput.classList.add('error');
+                isValid = false;
             }
         }
-        if (!isValid) { const firstError = currentForm.querySelector('.error'); if (firstError) firstError.focus(); }
+        if (stepIndex === 1) {
+            const weight = parseFloat(weightInput?.value);
+            const height = parseFloat(heightInput?.value);
+            if (!weight || weight <= 0) {
+                if (weightInput) weightInput.classList.add('error');
+                isValid = false;
+            }
+            if (!height || height <= 0) {
+                if (heightInput) heightInput.classList.add('error');
+                isValid = false;
+            }
+        }
         return isValid;
+    }
+
+    function validateCurrentStep() {
+        const isValid = validateStep(currentStep);
+        if (!isValid) {
+            const currentForm = forms[currentStep];
+            const firstError = currentForm?.querySelector('.error');
+            if (firstError) firstError.focus();
+        }
+        return isValid;
+    }
+
+    function validateAllSteps() {
+        for (let i = 0; i < forms.length; i++) {
+            if (!validateStep(i)) {
+                currentStep = i;
+                updateUI();
+                const firstError = forms[i].querySelector('.error');
+                if (firstError) firstError.focus();
+                return false;
+            }
+        }
+        return true;
     }
     
     // BMI Calculator
@@ -1317,25 +1394,54 @@
     if (securityArea) { securityArea.style.display = 'block'; }
     
     // Navigation
-    document.getElementById('nextBtn1')?.addEventListener('click', () => { if (validateCurrentStep() && currentStep < totalSteps - 1) { currentStep++; updateUI(); } });
-    document.getElementById('nextBtn2')?.addEventListener('click', () => { if (validateCurrentStep() && currentStep < totalSteps - 1) { currentStep++; updateUI(); } });
-    document.getElementById('nextBtn3')?.addEventListener('click', () => { if (validateCurrentStep() && currentStep < totalSteps - 1) { currentStep++; updateUI(); } });
-    document.getElementById('nextBtn4')?.addEventListener('click', () => { if (validateCurrentStep() && currentStep < totalSteps - 1) { currentStep++; updateUI(); } });
+    function goNext() {
+        if (!validateCurrentStep()) {
+            showFormError('Please fill in all required fields on this step.');
+            return;
+        }
+        showFormError('');
+        if (currentStep < totalSteps - 1) {
+            currentStep++;
+            updateUI();
+        }
+    }
+
+    document.getElementById('nextBtn1')?.addEventListener('click', goNext);
+    document.getElementById('nextBtn2')?.addEventListener('click', goNext);
+    document.getElementById('nextBtn3')?.addEventListener('click', goNext);
+    document.getElementById('nextBtn4')?.addEventListener('click', goNext);
     document.getElementById('prevBtn2')?.addEventListener('click', () => { if (currentStep > 0) { currentStep--; updateUI(); } });
     document.getElementById('prevBtn3')?.addEventListener('click', () => { if (currentStep > 0) { currentStep--; updateUI(); } });
     document.getElementById('prevBtn4')?.addEventListener('click', () => { if (currentStep > 0) { currentStep--; updateUI(); } });
     document.getElementById('prevBtn5')?.addEventListener('click', () => { if (currentStep > 0) { currentStep--; updateUI(); } });
     document.getElementById('submitBtn')?.addEventListener('click', async (e) => { 
-        e.preventDefault(); 
-        // Check username and email availability before submitting
-        const isUsernameAvailable = await checkUsernameAvailability();
-        const isEmailAvailable = await checkEmailAvailability();
-        
-        if (validateCurrentStep() && isUsernameAvailable && isEmailAvailable) { 
-            document.getElementById('registerForm').submit(); 
-        } else {
-            alert('Please fix the errors above before submitting.');
+        e.preventDefault();
+        showFormError('');
+
+        if (!validateAllSteps()) {
+            showFormError('Please complete all required fields on every step (highlighted in red).');
+            return;
         }
+
+        const isUsernameAvailable = await checkUsernameAvailability();
+        if (!isUsernameAvailable) {
+            currentStep = 0;
+            updateUI();
+            showFormError('Username is unavailable or invalid. See the message under Username on step 1.');
+            usernameInput?.focus();
+            return;
+        }
+
+        const isEmailAvailable = await checkEmailAvailability();
+        if (!isEmailAvailable) {
+            currentStep = 0;
+            updateUI();
+            showFormError('Email is invalid or already registered. Sign in or use a different email on step 1.');
+            emailInput?.focus();
+            return;
+        }
+
+        document.getElementById('registerForm').submit();
     });
     
     document.querySelectorAll('.form-control').forEach(field => { field.addEventListener('input', () => field.classList.remove('error')); });

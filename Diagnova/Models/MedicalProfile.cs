@@ -43,7 +43,8 @@ public class MedicalProfile
     // Emergency & Contact Info
     // Emergency & Contact Info
     public string EmergencyContactName { get; set; } = string.Empty;
-    public string EmergencyContactEmail { get; set; } = string.Empty;  // ← Changed to Email
+    public string EmergencyContactEmail { get; set; } = string.Empty;
+    public string EmergencyContactPhone { get; set; } = string.Empty;
     public string CountryRegion { get; set; } = string.Empty;
 
     // Security

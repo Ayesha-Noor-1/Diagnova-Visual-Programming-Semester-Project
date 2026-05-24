@@ -395,6 +395,80 @@ public sealed class OpenAiChatService : IOpenAiChatService
         public string? Notes { get; set; }
     }
 
+    public async Task<DailyTipGeneration?> GenerateDailyConditionTipAsync(
+        IReadOnlyList<string> conditions,
+        string category,
+        string? patientProfileContext,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(_options.ApiKey))
+            return null;
+
+        var conditionList = conditions.Count > 0
+            ? string.Join(", ", conditions)
+            : "general wellness (no specific condition listed)";
+
+        var profileBlock = string.IsNullOrWhiteSpace(patientProfileContext)
+            ? ""
+            : $"\nAdditional profile context:\n{patientProfileContext.Trim()}";
+
+        var system = """
+            You write one short, practical daily health tip for a patient app (Diagnova).
+            Tips must be educational only — not diagnosis or prescription.
+            Be specific to the patient's condition(s) when provided.
+            Return ONLY valid JSON with keys:
+            - "title" (short headline, max 8 words)
+            - "body" (2-3 sentences, actionable, friendly)
+            - "category" (echo the requested category: diet, exercise, or lifestyle)
+            """;
+
+        var user = $"""
+            Today's focus category: {category}
+            Registered conditions: {conditionList}
+            {profileBlock}
+
+            Example for diabetes + diet: suggest one low-GI meal idea appropriate for South Asia if region unknown.
+            Write today's tip for this user.
+            """;
+
+        var model = string.IsNullOrWhiteSpace(_options.Model) ? "gpt-4o-mini" : _options.Model;
+        var raw = await PostChatJsonAsync(model, system, user, temperature: 0.7, cancellationToken);
+        if (string.IsNullOrWhiteSpace(raw))
+            return null;
+
+        try
+        {
+            var slice = ExtractJsonObject(raw);
+            var dto = JsonSerializer.Deserialize<DailyTipJsonDto>(slice, JsonRelaxed);
+            if (dto is null || string.IsNullOrWhiteSpace(dto.Body))
+                return null;
+
+            return new DailyTipGeneration
+            {
+                Title = string.IsNullOrWhiteSpace(dto.Title) ? "Your daily tip" : dto.Title.Trim(),
+                Body = dto.Body.Trim(),
+                Category = string.IsNullOrWhiteSpace(dto.Category) ? category : dto.Category.Trim().ToLowerInvariant(),
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to parse daily tip JSON");
+            return null;
+        }
+    }
+
+    private sealed class DailyTipJsonDto
+    {
+        [JsonPropertyName("title")]
+        public string? Title { get; set; }
+
+        [JsonPropertyName("body")]
+        public string? Body { get; set; }
+
+        [JsonPropertyName("category")]
+        public string? Category { get; set; }
+    }
+
     private static string UserFacingChatHttpError(int statusCode)
     {
         if (statusCode == 401)

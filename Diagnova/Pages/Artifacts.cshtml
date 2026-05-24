@@ -364,6 +364,10 @@
                         <span class="info-value">@(string.IsNullOrEmpty(Model.UserProfile.EmergencyContactEmail) ? "Not set" : Model.UserProfile.EmergencyContactEmail)</span>
                     </div>
                     <div class="info-row">
+                        <span class="info-label">Contact Phone (SMS)</span>
+                        <span class="info-value">@(string.IsNullOrEmpty(Model.UserProfile.EmergencyContactPhone) ? "Not set" : Model.UserProfile.EmergencyContactPhone)</span>
+                    </div>
+                    <div class="info-row">
                         <span class="info-label">Country</span>
                         <span class="info-value">@(string.IsNullOrEmpty(Model.UserProfile.CountryRegion) ? "Not set" : Model.UserProfile.CountryRegion)</span>
                     </div>

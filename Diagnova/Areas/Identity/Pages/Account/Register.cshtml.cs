@@ -113,6 +113,10 @@ public class RegisterModel : PageModel
         [Display(Name = "Emergency contact email")]
         public string? EmergencyContactEmail { get; set; }
 
+        [Phone]
+        [Display(Name = "Emergency contact phone (for SMS SOS)")]
+        public string? EmergencyContactPhone { get; set; }
+
         [Display(Name = "Country / region")]
         public string? CountryRegion { get; set; }
 
@@ -200,6 +204,7 @@ public class RegisterModel : PageModel
                     DailyCalorieTarget = Input.DailyCalorieTarget,
                     EmergencyContactName = Input.EmergencyContactName ?? string.Empty,
                     EmergencyContactEmail = Input.EmergencyContactEmail ?? string.Empty,
+                    EmergencyContactPhone = Input.EmergencyContactPhone ?? string.Empty,
                     CountryRegion = Input.CountryRegion ?? string.Empty,
                     RecoveryMethod = Input.RecoveryMethod,
                     SecurityQuestion = Input.SecurityQuestion,

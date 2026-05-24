@@ -819,6 +819,85 @@
             max-height: calc(100vh - 1rem);
         }
 
+        .daily-tip-card {
+            background: linear-gradient(135deg, #fff9f0 0%, #ffffff 55%, #f0faf4 100%);
+            border-radius: 20px;
+            padding: 1.35rem 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-md);
+            border: 1px solid rgba(15, 92, 59, 0.12);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .daily-tip-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--gradient-primary);
+        }
+
+        .daily-tip-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .daily-tip-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            background: var(--primary-green-soft);
+            color: var(--primary-green);
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding: 0.3rem 0.65rem;
+            border-radius: 999px;
+        }
+
+        .daily-tip-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin: 0.35rem 0 0.5rem;
+        }
+
+        .daily-tip-body {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.55;
+            margin: 0;
+        }
+
+        .daily-tip-meta {
+            font-size: 0.72rem;
+            color: var(--text-light);
+            margin-top: 0.85rem;
+        }
+
+        .daily-tip-conditions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            margin-top: 0.5rem;
+        }
+
+        .daily-tip-condition-pill {
+            font-size: 0.68rem;
+            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: 999px;
+            padding: 0.15rem 0.55rem;
+            color: var(--primary-green);
+        }
+
         .chart-panel {
             background: var(--bg-white);
             border-radius: 20px;
@@ -1169,6 +1248,8 @@
     </div>
 </div>
 
+<partial name="_SosWidget" />
+
 <!-- Modal for Create Vital -->
 <div id="vitalModal" class="modal-overlay">
     <div class="modal-content">
@@ -1280,6 +1361,18 @@
                 <div class="user-greeting-name">${escapeHtml(initialData.userName)}!</div>
                 <div class="welcome-message">Your health journey continues. Track symptoms, monitor vitals, and get AI-powered guidance — all in one place.</div>
             </div>
+            <div id="dailyTipCard" class="daily-tip-card">
+                <div class="daily-tip-header">
+                    <div>
+                        <span class="daily-tip-badge"><i class="fas fa-book-medical"></i> Daily tip</span>
+                        <div class="daily-tip-title" id="dailyTipTitle">Loading your tip…</div>
+                    </div>
+                    <span class="daily-tip-badge" id="dailyTipCategory" style="background:#e8f0ff;color:#2563eb;">—</span>
+                </div>
+                <p class="daily-tip-body" id="dailyTipBody">Personalized diet, exercise, and lifestyle ideas based on your health profile.</p>
+                <div class="daily-tip-conditions" id="dailyTipConditions"></div>
+                <p class="daily-tip-meta" id="dailyTipMeta"></p>
+            </div>
             <div class="stats-grid">
                 <div class="stat-box">
                     <div class="stat-icon"><i class="fas fa-comments"></i></div>
@@ -1316,6 +1409,7 @@
             </div>
         `;
         document.getElementById('dynamicContent').innerHTML = html;
+        loadDailyTip();
 
         try {
             const actRes = await fetch('/api/dashboard/activity', { credentials: 'same-origin' });
@@ -1345,6 +1439,46 @@
             }
         } catch (e) {
             console.error('Activity chart failed', e);
+        }
+    }
+
+    async function loadDailyTip() {
+        const titleEl = document.getElementById('dailyTipTitle');
+        const bodyEl = document.getElementById('dailyTipBody');
+        const catEl = document.getElementById('dailyTipCategory');
+        const metaEl = document.getElementById('dailyTipMeta');
+        const condEl = document.getElementById('dailyTipConditions');
+        if (!titleEl || !bodyEl) return;
+
+        try {
+            const res = await fetch('/api/tips/daily', { credentials: 'same-origin' });
+            if (!res.ok) throw new Error('failed');
+            const tip = await res.json();
+            titleEl.textContent = tip.title || tip.Title || 'Your daily tip';
+            bodyEl.textContent = tip.body || tip.Body || '';
+            if (catEl) {
+                catEl.textContent = tip.categoryLabel || tip.CategoryLabel || tip.category || 'Wellness';
+            }
+            if (condEl) {
+                const conditions = tip.conditions || tip.Conditions || [];
+                if (conditions.length) {
+                    condEl.innerHTML = conditions.map(function (c) {
+                        return '<span class="daily-tip-condition-pill">' + escapeHtml(c) + '</span>';
+                    }).join('');
+                } else {
+                    condEl.innerHTML = '<span class="daily-tip-condition-pill">General wellness</span>';
+                }
+            }
+            if (metaEl) {
+                const date = tip.tipDate || tip.TipDate || '';
+                const personalized = tip.isPersonalized || tip.IsPersonalized;
+                metaEl.textContent = (personalized ? 'Based on your registered conditions' : 'General health tip') +
+                    (date ? ' · ' + date : '') +
+                    ' · Refreshes daily';
+            }
+        } catch (e) {
+            titleEl.textContent = 'Could not load today\'s tip';
+            bodyEl.textContent = 'Check your connection or try again later. Tips rotate daily across diet, exercise, and lifestyle.';
         }
     }
 
@@ -1532,7 +1666,8 @@
                         ${renderEditableField('Daily Calorie Target', profile.dailyCalorieTarget || 'Not set', 'dailyCalorieTarget')}
                         ${renderEditableField('Country/Region', profile.countryRegion || 'Not set', 'countryRegion')}
                         ${renderEditableField('Emergency Contact', profile.emergencyContactName || 'Not set', 'emergencyContactName')}
-                        ${renderEditableField('Emergency Phone', profile.emergencyContactPhone || 'Not set', 'emergencyContactPhone')}
+                        ${renderEditableField('Emergency Email', profile.emergencyContactEmail || 'Not set', 'emergencyContactEmail')}
+                        ${renderEditableField('Emergency Phone (SMS)', profile.emergencyContactPhone || 'Not set', 'emergencyContactPhone')}
                     </div>
                 </div>
             </div>

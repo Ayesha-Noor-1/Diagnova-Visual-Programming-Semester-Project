@@ -1148,3 +1148,61 @@ body.dn-inner .dn-main {
   border-radius: var(--dn-radius-lg);
   border: 1px solid var(--dn-border);
 }
+
+/* —— One-tap SOS —— */
+.dn-sos-fab {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 1050;
+  width: 4.25rem;
+  height: 4.25rem;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  background: linear-gradient(145deg, #dc3545 0%, #b02a37 100%);
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  box-shadow: 0 8px 28px rgba(220, 53, 69, 0.55);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  animation: dn-sos-pulse 2s ease-in-out infinite;
+}
+
+.dn-sos-fab:hover {
+  transform: scale(1.06);
+  box-shadow: 0 12px 32px rgba(220, 53, 69, 0.65);
+}
+
+.dn-sos-fab:active {
+  transform: scale(0.98);
+}
+
+@keyframes dn-sos-pulse {
+  0%, 100% { box-shadow: 0 8px 28px rgba(220, 53, 69, 0.55); }
+  50% { box-shadow: 0 8px 36px rgba(220, 53, 69, 0.85); }
+}
+
+.dn-sos-modal-header {
+  background: linear-gradient(135deg, #b02a37, #dc3545);
+  color: #fff;
+}
+
+.dn-sos-map {
+  min-height: 220px;
+  background: var(--dn-surface);
+  border: 1px solid var(--dn-border);
+}
+
+.dn-sos-profile-preview {
+  background: var(--dn-surface);
+  border: 1px solid var(--dn-border);
+  border-radius: var(--dn-radius-lg);
+  padding: 0.75rem;
+  max-height: 220px;
+  overflow: auto;
+  white-space: pre-wrap;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
