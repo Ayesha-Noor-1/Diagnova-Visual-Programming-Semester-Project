@@ -297,6 +297,151 @@ body.dn-inner .dn-main {
 }
 
 /* —— Chat —— */
+.dn-chat-body,
+.dn-chat-body-page {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--dn-bg);
+}
+
+.dn-chat-app {
+  display: flex;
+  min-height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+}
+
+.dn-chat-sidebar {
+  width: min(300px, 36vw);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--dn-surface-elevated);
+  border-right: 1px solid var(--dn-border);
+  padding: 1.25rem 1rem;
+  overflow: hidden;
+}
+
+.dn-chat-sidebar-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.dn-chat-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: var(--dn-green-soft);
+  color: var(--dn-green);
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.dn-chat-sidebar-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--dn-green);
+  margin: 0;
+}
+
+.dn-chat-sidebar-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.dn-chat-sidebar-actions {
+  margin-bottom: 1rem;
+}
+
+.dn-chat-history-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--dn-ink-muted);
+  margin-bottom: 0.5rem;
+}
+
+.dn-chat-history-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-right: 0.15rem;
+}
+
+.dn-chat-history-empty {
+  font-size: 0.85rem;
+  color: var(--dn-ink-muted);
+  margin: 0;
+}
+
+.dn-chat-history-card {
+  display: block;
+  padding: 0.75rem 0.85rem;
+  border-radius: var(--dn-radius-md);
+  border: 1px solid var(--dn-border);
+  background: #fff;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.dn-chat-history-card:hover {
+  border-color: rgba(25, 135, 84, 0.35);
+  box-shadow: var(--dn-shadow-sm);
+}
+
+.dn-chat-history-card.active {
+  border-color: var(--dn-green);
+  background: var(--dn-green-soft);
+}
+
+.dn-chat-history-card-title {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9rem;
+  line-height: 1.35;
+  margin-bottom: 0.25rem;
+}
+
+.dn-chat-history-card-meta {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--dn-ink-muted);
+}
+
+.dn-chat-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: linear-gradient(180deg, #f8faf9 0%, var(--dn-bg) 100%);
+}
+
+.dn-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem 1.25rem;
+  scroll-behavior: smooth;
+}
+
+.dn-chat-welcome {
+  max-width: 24rem;
+  margin: 2rem auto;
+  text-align: center;
+}
+
 .dn-chat-page {
   max-width: 52rem;
   margin: 0 auto;
@@ -305,6 +450,25 @@ body.dn-inner .dn-main {
   display: flex;
   flex-direction: column;
   min-height: calc(100vh - 8rem);
+}
+
+@media (max-width: 768px) {
+  .dn-chat-app {
+    flex-direction: column;
+    max-height: none;
+    min-height: 100vh;
+  }
+
+  .dn-chat-sidebar {
+    width: 100%;
+    max-height: 40vh;
+    border-right: none;
+    border-bottom: 1px solid var(--dn-border);
+  }
+
+  .dn-chat-messages {
+    min-height: 50vh;
+  }
 }
 
 .dn-chat-toolbar {
@@ -404,6 +568,322 @@ body.dn-inner .dn-main {
   word-break: break-word;
 }
 
+.dn-markdown {
+  white-space: normal;
+}
+
+.dn-markdown h1,
+.dn-markdown h2,
+.dn-markdown h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0.75rem 0 0.35rem;
+}
+
+.dn-markdown h2:first-child,
+.dn-markdown h3:first-child,
+.dn-markdown p:first-child {
+  margin-top: 0;
+}
+
+.dn-markdown p {
+  margin-bottom: 0.5rem;
+}
+
+.dn-markdown ul,
+.dn-markdown ol {
+  margin: 0.35rem 0 0.65rem 1.1rem;
+  padding: 0;
+}
+
+.dn-markdown li {
+  margin-bottom: 0.25rem;
+}
+
+.dn-markdown strong {
+  font-weight: 700;
+}
+
+.dn-msg-row:not(.user) .dn-markdown a {
+  color: var(--dn-green);
+  text-decoration: underline;
+}
+
+.dn-emergency-map {
+  min-height: 280px !important;
+  height: 100%;
+  width: 100%;
+  z-index: 0;
+}
+
+/* Emergency modal — full viewport width, centered (append to body via chat.js) */
+#emergencyModal.modal {
+  --bs-modal-width: min(1120px, 96vw);
+}
+
+#emergencyModal .modal-dialog.dn-emergency-modal-dialog {
+  width: min(1120px, 96vw) !important;
+  max-width: min(1120px, 96vw) !important;
+  margin: 1.5rem auto;
+}
+
+#emergencyModal .dn-emergency-modal-content {
+  border-radius: var(--dn-radius-lg, 1rem);
+  overflow: hidden;
+  width: 100%;
+}
+
+.dn-emergency-modal-header {
+  background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%);
+  color: #fff;
+  border: 0;
+  padding: 1.1rem 1.35rem;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.dn-emergency-modal-header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.dn-emergency-modal-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  margin-bottom: 0.35rem;
+}
+
+.dn-emergency-modal-header .modal-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.dn-emergency-modal-body {
+  padding: 1.25rem 1.35rem;
+}
+
+.dn-emergency-reason {
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--dn-radius, 0.5rem);
+  background: #fff5f5;
+  border: 1px solid #f5c2c7;
+  color: #842029;
+  margin-bottom: 0;
+}
+
+.dn-emergency-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dn-emergency-panel-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6c757d;
+  margin-bottom: 0.5rem;
+}
+
+#emergencyModal .dn-emergency-modal-body {
+  overflow-x: hidden;
+}
+
+.dn-emergency-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 1.5rem;
+  align-items: stretch;
+  min-height: 380px;
+}
+
+@media (max-width: 991.98px) {
+  .dn-emergency-layout {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .dn-emergency-map-panel .dn-emergency-map {
+    min-height: 240px !important;
+  }
+}
+
+.dn-emergency-map-panel,
+.dn-emergency-list-panel {
+  min-width: 0;
+}
+
+.dn-emergency-map-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.dn-emergency-map-panel .dn-emergency-map {
+  flex: 1;
+  min-height: 340px;
+  border: 1px solid #dee2e6;
+}
+
+.dn-facility-list {
+  max-height: 400px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-right: 0.35rem;
+}
+
+.dn-facility-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.dn-facility-card {
+  padding: 0.85rem 1rem;
+  border: 1px solid #f5c2c7;
+  border-radius: var(--dn-radius, 0.5rem);
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(220, 53, 69, 0.08);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.dn-facility-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.dn-facility-name {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #212529;
+  line-height: 1.3;
+}
+
+.dn-facility-distance {
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #dc3545;
+  white-space: nowrap;
+}
+
+.dn-facility-address {
+  margin: 0 0 0.6rem;
+  font-size: 0.85rem;
+  color: #6c757d;
+  line-height: 1.4;
+}
+
+.dn-facility-maps-btn {
+  font-weight: 600;
+}
+
+.dn-emergency-modal-footer {
+  border-top: 1px solid #eee;
+  padding: 0.85rem 1.35rem;
+  gap: 0.5rem;
+}
+
+.dn-emergency-banner {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+  margin: 0 1rem 0.75rem;
+  padding: 1rem 1.1rem;
+  border-radius: var(--dn-radius-lg);
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border: 2px solid #dc3545;
+  box-shadow: 0 4px 20px rgba(220, 53, 69, 0.2);
+  animation: dn-emergency-pulse 2s ease-in-out infinite;
+}
+
+@keyframes dn-emergency-pulse {
+  0%, 100% { box-shadow: 0 4px 20px rgba(220, 53, 69, 0.2); }
+  50% { box-shadow: 0 4px 28px rgba(220, 53, 69, 0.45); }
+}
+
+.dn-emergency-banner-icon {
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: #dc3545;
+  color: #fff;
+  font-weight: 800;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dn-emergency-banner-title {
+  display: block;
+  color: #b02a37;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.dn-emergency-banner-body {
+  flex: 1;
+  color: #842029;
+}
+
+.dn-msg-bubble--emergency {
+  background: #fff5f5 !important;
+  border: 2px solid #dc3545 !important;
+  color: #842029 !important;
+}
+
+.dn-msg-row.emergency .dn-msg-meta {
+  color: #dc3545 !important;
+  font-weight: 700;
+}
+
+.dn-msg-row.emergency .dn-markdown h2,
+.dn-msg-row.emergency .dn-markdown strong {
+  color: #b02a37;
+}
+
+.dn-typing {
+  display: flex;
+  gap: 4px;
+  padding: 0.25rem 0;
+}
+
+.dn-typing span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--dn-green);
+  animation: dn-typing-bounce 1.2s infinite ease-in-out;
+}
+
+.dn-typing span:nth-child(2) { animation-delay: 0.15s; }
+.dn-typing span:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes dn-typing-bounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+.dn-avatar-letter {
+  font-size: 0.55rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
 .dn-composer-wrap {
   margin-top: auto;
   padding-top: 1rem;
@@ -459,6 +939,63 @@ body.dn-inner .dn-main {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+}
+
+.dn-chat-main .dn-composer-wrap {
+  flex-shrink: 0;
+  padding: 0.85rem 1.25rem 1.25rem;
+  border-top: 1px solid var(--dn-border);
+  background: var(--dn-surface-elevated);
+}
+
+.dn-history-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.dn-history-card {
+  display: block;
+  padding: 1.15rem 1.25rem;
+  border-radius: var(--dn-radius-lg);
+  border: 1px solid var(--dn-border);
+  background: var(--dn-surface-elevated);
+  text-decoration: none;
+  color: inherit;
+  box-shadow: var(--dn-shadow-sm);
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+
+.dn-history-card:hover {
+  border-color: rgba(25, 135, 84, 0.4);
+  box-shadow: var(--dn-shadow-md);
+  transform: translateY(-2px);
+}
+
+.dn-history-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.dn-history-card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.dn-history-card-date {
+  font-size: 0.82rem;
+  color: var(--dn-ink-muted);
+  margin-bottom: 0.35rem;
+}
+
+.dn-history-card-meta {
+  font-size: 0.78rem;
+  color: var(--dn-ink-muted);
 }
 
 /* —— Inner pages (Medicine, Vitals, etc.) —— */
@@ -610,4 +1147,62 @@ body.dn-inner .dn-main {
   background: var(--dn-surface-elevated);
   border-radius: var(--dn-radius-lg);
   border: 1px solid var(--dn-border);
+}
+
+/* —— One-tap SOS —— */
+.dn-sos-fab {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 1050;
+  width: 4.25rem;
+  height: 4.25rem;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  background: linear-gradient(145deg, #dc3545 0%, #b02a37 100%);
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  box-shadow: 0 8px 28px rgba(220, 53, 69, 0.55);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  animation: dn-sos-pulse 2s ease-in-out infinite;
+}
+
+.dn-sos-fab:hover {
+  transform: scale(1.06);
+  box-shadow: 0 12px 32px rgba(220, 53, 69, 0.65);
+}
+
+.dn-sos-fab:active {
+  transform: scale(0.98);
+}
+
+@keyframes dn-sos-pulse {
+  0%, 100% { box-shadow: 0 8px 28px rgba(220, 53, 69, 0.55); }
+  50% { box-shadow: 0 8px 36px rgba(220, 53, 69, 0.85); }
+}
+
+.dn-sos-modal-header {
+  background: linear-gradient(135deg, #b02a37, #dc3545);
+  color: #fff;
+}
+
+.dn-sos-map {
+  min-height: 220px;
+  background: var(--dn-surface);
+  border: 1px solid var(--dn-border);
+}
+
+.dn-sos-profile-preview {
+  background: var(--dn-surface);
+  border: 1px solid var(--dn-border);
+  border-radius: var(--dn-radius-lg);
+  padding: 0.75rem;
+  max-height: 220px;
+  overflow: auto;
+  white-space: pre-wrap;
+  font-size: 0.8rem;
+  line-height: 1.45;
 }

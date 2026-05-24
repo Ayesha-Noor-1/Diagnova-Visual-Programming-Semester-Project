@@ -1,0 +1,52 @@
+@model Diagnova.Pages.ChatModel
+
+<div class="modal fade" id="emergencyModal" tabindex="-1" aria-labelledby="emergencyModalTitle" aria-hidden="true" data-auto-locate="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl dn-emergency-modal-dialog">
+        <div class="modal-content dn-emergency-modal-content border-0 shadow-lg">
+            <div class="modal-header dn-emergency-modal-header">
+                <div class="dn-emergency-modal-header-text">
+                    <span class="dn-emergency-modal-badge">Emergency</span>
+                    <h5 class="modal-title mb-0" id="emergencyModalTitle">You may be in an alarming situation</h5>
+                    <p class="mb-0 small opacity-90">Seek urgent in-person care. Call <strong>1122</strong> if symptoms are severe.</p>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body dn-emergency-modal-body">
+                @if (!string.IsNullOrWhiteSpace(Model.AlarmingReason))
+                {
+                    <p class="dn-emergency-reason mb-3">@Model.AlarmingReason</p>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.SpecialistHint))
+                {
+                    <p class="small text-muted mb-3"><strong>Related care:</strong> @Model.SpecialistHint</p>
+                }
+                @if (Model.EmergencyKeywords.Count > 0)
+                {
+                    <p class="small mb-3"><strong>Matched phrases:</strong> @string.Join(", ", Model.EmergencyKeywords)</p>
+                }
+
+                <div class="dn-emergency-actions mb-3">
+                    <button type="button" class="btn btn-danger" id="emergencyShareLocationBtn">
+                        Use my location
+                    </button>
+                    <span class="small text-muted align-self-center" id="emergencyGeoStatus"></span>
+                </div>
+
+                <div class="dn-emergency-layout">
+                    <div class="dn-emergency-map-panel">
+                        <p class="dn-emergency-panel-label mb-2">Your area &amp; nearby hospitals</p>
+                        <div id="emergencyMap" class="dn-emergency-map rounded-3"></div>
+                    </div>
+                    <div class="dn-emergency-list-panel">
+                        <p class="dn-emergency-panel-label mb-2">Nearest emergency facilities</p>
+                        <div id="emergencyFacilityList" class="dn-facility-list"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer dn-emergency-modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <a class="btn btn-danger" asp-page="/Nearby">More nearby care</a>
+            </div>
+        </div>
+    </div>
+</div>

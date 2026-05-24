@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Diagnova.Models;
 using Diagnova.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,10 +11,12 @@ namespace Diagnova.Pages;
 public class MedicineModel : PageModel
 {
     private readonly IOpenFdaService _fda;
+    private readonly MongoDbService _mongoDb;
 
-    public MedicineModel(IOpenFdaService fda)
+    public MedicineModel(IOpenFdaService fda, MongoDbService mongoDb)
     {
         _fda = fda;
+        _mongoDb = mongoDb;
     }
 
     [BindProperty(SupportsGet = true)]
@@ -29,5 +33,20 @@ public class MedicineModel : PageModel
 
         Searched = true;
         Result = await _fda.SearchDrugLabelAsync(Query, cancellationToken);
+
+        if (Result is not null)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!string.IsNullOrEmpty(userId))
+            {
+                await _mongoDb.MedicineSearchHistory.InsertOneAsync(new MongoMedicineSearch
+                {
+                    UserId = userId,
+                    Query = Query.Trim(),
+                    SearchedAt = DateTimeOffset.UtcNow,
+                    BrandName = Result.BrandName ?? Result.GenericName,
+                }, cancellationToken: cancellationToken);
+            }
+        }
     }
 }

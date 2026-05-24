@@ -43,7 +43,7 @@
 
     @if (Model.Result is not null)
     {
-        <article class="dn-surface-card dn-surface-card-lg overflow-hidden">
+        <article id="medicine-result-card" class="dn-surface-card dn-surface-card-lg overflow-hidden medicine-result-card">
             <div class="px-4 py-3 border-bottom" style="background: linear-gradient(90deg, var(--dn-green-soft), transparent);">
                 <h2 class="h4 mb-1 fw-bold">@(!string.IsNullOrEmpty(Model.Result.BrandName) ? Model.Result.BrandName : "Drug label")</h2>
                 @if (!string.IsNullOrEmpty(Model.Result.GenericName))

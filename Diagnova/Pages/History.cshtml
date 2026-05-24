@@ -10,10 +10,10 @@
         <div>
             <p class="dn-page-eyebrow mb-0">Your account</p>
             <h1 class="dn-page-title mb-2">Chat history</h1>
-            <p class="dn-page-lead mb-0">Sessions are stored for your login. Open the assistant to continue an active thread.</p>
+            <p class="dn-page-lead mb-0">All symptom assistant conversations. Select a card to continue.</p>
         </div>
-        <a class="btn dn-btn-outline-success rounded-pill px-4 fw-semibold flex-shrink-0" asp-page="/Chat">
-            <partial name="_Icon" model='new IconModel { Id = "chat", Size = 18, CssClass = "dn-icon me-1" }' /> Open assistant
+        <a class="btn dn-btn-success rounded-pill px-4 fw-semibold flex-shrink-0" asp-page="/Chat">
+            <partial name="_Icon" model='new IconModel { Id = "chat", Size = 18, CssClass = "dn-icon me-1" }' /> New chat
         </a>
     </header>
 
@@ -30,39 +30,28 @@
     }
     else
     {
-        <div class="dn-table-wrap">
-            <table class="table table-hover align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th class="ps-4">Started</th>
-                        <th>Status</th>
-                        <th>Messages</th>
-                        <th class="pe-4 text-end">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                @foreach (var s in Model.Sessions)
-                {
-                    <tr>
-                        <td class="ps-4">@s.StartedAt.LocalDateTime.ToString("g")</td>
-                        <td>
-                            @if (s.ClosedAt.HasValue)
-                            {
-                                <span class="badge rounded-pill text-bg-secondary">Closed</span>
-                            }
-                            else
-                            {
-                                <span class="badge rounded-pill text-bg-success">Active</span>
-                            }
-                        </td>
-                        <td class="fw-semibold">@s.MessageCount</td>
-                        <td class="pe-4 text-end">
-                            <a class="btn btn-sm dn-btn-outline-success rounded-pill px-3" asp-page="/Chat">Continue</a>
-                        </td>
-                    </tr>
-                }
-                </tbody>
-            </table>
+        <div class="dn-history-grid">
+            @foreach (var s in Model.Sessions)
+            {
+                <a class="dn-history-card" asp-page="/Chat" asp-route-sessionId="@s.Id">
+                    <div class="dn-history-card-top">
+                        <h2 class="dn-history-card-title">@s.Title</h2>
+                        @if (s.ClosedAt.HasValue)
+                        {
+                            <span class="badge rounded-pill text-bg-secondary">Closed</span>
+                        }
+                        else
+                        {
+                            <span class="badge rounded-pill text-bg-success">Active</span>
+                        }
+                    </div>
+                    <p class="dn-history-card-date">
+                        <partial name="_Icon" model='new IconModel { Id = "clock", Size = 14, CssClass = "dn-icon me-1" }' />
+                        @s.StartedAt.LocalDateTime.ToString("MMMM d, yyyy · h:mm tt")
+                    </p>
+                    <p class="dn-history-card-meta mb-0">@s.MessageCount message@(s.MessageCount == 1 ? "" : "s")</p>
+                </a>
+            }
         </div>
     }
 </div>

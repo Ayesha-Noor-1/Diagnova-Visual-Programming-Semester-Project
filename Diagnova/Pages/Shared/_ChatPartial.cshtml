@@ -1,0 +1,126 @@
+@model Diagnova.Pages.ChatModel
+@using Diagnova.Services
+
+<div class="dn-chat-app" data-session-id="@Model.CurrentSessionId" @(Model.ShowEmergencyModal ? "data-show-emergency=\"true\"" : "")>
+    <aside class="dn-chat-sidebar" aria-label="Chat history">
+        <div class="dn-chat-sidebar-head">
+            <a class="dn-chat-back" asp-page="/Dashboard" title="Back to dashboard">
+                <partial name="_Icon" model='new IconModel { Id = "arrow-left", Size = 18, CssClass = "dn-icon" }' />
+            </a>
+            <div>
+                <p class="dn-chat-sidebar-label">Symptom assistant</p>
+                <h1 class="dn-chat-sidebar-title">Diagnova</h1>
+            </div>
+        </div>
+        <div class="dn-chat-sidebar-actions">
+            <form method="post" asp-page-handler="NewChat" class="m-0 w-100" id="newChatForm" data-dn-new-chat="true">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn dn-btn-success w-100 rounded-pill">
+                    <partial name="_Icon" model='new IconModel { Id = "plus", Size = 16, CssClass = "dn-icon me-1" }' /> New chat
+                </button>
+            </form>
+        </div>
+        <p class="dn-chat-history-label">Chat history</p>
+        <div class="dn-chat-history-list">
+            @if (Model.ChatSessions.Count == 0)
+            {
+                <p class="dn-chat-history-empty">No conversations yet. Start a new chat.</p>
+            }
+            else
+            {
+                @foreach (var s in Model.ChatSessions)
+                {
+                    var active = s.Id == Model.CurrentSessionId;
+                    <a class="dn-chat-history-card @(active ? "active" : "")"
+                       asp-page="/Chat"
+                       asp-route-sessionId="@s.Id">
+                        <span class="dn-chat-history-card-title">@s.Title</span>
+                        <span class="dn-chat-history-card-meta">
+                            @s.StartedAt.LocalDateTime.ToString("MMM d, yyyy · h:mm tt")
+                            · @s.MessageCount msg@(s.MessageCount == 1 ? "" : "s")
+                        </span>
+                    </a>
+                }
+            }
+        </div>
+    </aside>
+
+    <section class="dn-chat-main">
+        @if (Model.ShowEmergencyModal)
+        {
+            <div class="dn-emergency-banner" role="alert" id="chatEmergencyBanner">
+                <div class="dn-emergency-banner-icon" aria-hidden="true">!</div>
+                <div class="dn-emergency-banner-body">
+                    <strong class="dn-emergency-banner-title">Alarming situation — seek urgent care</strong>
+                    <p class="mb-2 small">Your symptoms may need <strong>immediate emergency attention</strong>. Call <strong>1122</strong> if severe.</p>
+                    @if (!string.IsNullOrWhiteSpace(Model.AlarmingReason))
+                    {
+                        <p class="small mb-2">@Model.AlarmingReason</p>
+                    }
+                    <button type="button" class="btn btn-light btn-sm fw-semibold" id="openEmergencyMapBtn">
+                        View map &amp; nearest hospitals
+                    </button>
+                </div>
+            </div>
+        }
+        <div class="dn-chat-messages" id="chatMessages">
+            @if (Model.Messages.Count == 0)
+            {
+                <div class="dn-chat-welcome">
+                    <div class="dn-mascot dn-mascot-lg mx-auto mb-3" aria-hidden="true">
+                        <partial name="_Icon" model='new IconModel { Id = "stethoscope", Size = 48, CssClass = "dn-icon dn-mascot-svg" }' />
+                    </div>
+                    <h2 class="h5 fw-semibold text-dark mb-1">How can I help today?</h2>
+                    <p class="text-muted small mb-0">Describe your symptoms. Past chats are remembered for better context.</p>
+                </div>
+            }
+            else
+            {
+                @foreach (var line in Model.Messages)
+                {
+                    var isUser = string.Equals(line.Role, "user", StringComparison.OrdinalIgnoreCase);
+                    var isEmergencyReply = !isUser && line.Content.Contains("Alarming situation", StringComparison.OrdinalIgnoreCase);
+                    <div class="dn-msg-row @(isUser ? "user" : "") @(isEmergencyReply ? "emergency" : "")">
+                        <div class="dn-avatar @(isUser ? "user" : "bot")" aria-hidden="true">
+                            <partial name="_Icon" model='@(isUser ? new IconModel { Id = "user", Size = 18, CssClass = "dn-icon dn-avatar-svg" } : new IconModel { Id = "assistant", Size = 18, CssClass = "dn-icon dn-avatar-svg" })' />
+                        </div>
+                        <div class="dn-msg-bubble text-start @(isEmergencyReply ? "dn-msg-bubble--emergency" : "")">
+                            <div class="dn-msg-meta">@(isUser ? "You" : "Diagnova")</div>
+                            @if (isUser)
+                            {
+                                <div class="dn-chat-content">@line.Content</div>
+                            }
+                            else
+                            {
+                                <div class="dn-chat-content dn-markdown">@Html.Raw(MarkdownFormatter.ToSafeHtml(line.Content))</div>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+
+        <div class="dn-composer-wrap">
+            <p class="dn-composer-hint text-center mb-2">
+                AI guidance only — <strong>not</strong> emergency care. Call <strong>1122</strong> if urgent.
+            </p>
+            <form method="post" id="chatForm" class="dn-chat-form">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="sessionId" value="@Model.CurrentSessionId" />
+                <div class="dn-composer">
+                    <textarea asp-for="UserInput" id="UserInput" class="form-control flex-grow-1" rows="1" placeholder="Describe symptoms, duration, severity…" autocomplete="off"></textarea>
+                    <div class="dn-composer-actions">
+                        <button type="submit" class="btn dn-btn-success dn-send-btn" id="chatSendBtn" aria-label="Send message">
+                            <partial name="_Icon" model='new IconModel { Id = "send", Size = 18, CssClass = "dn-icon" }' />
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+
+@if (Model.ShowEmergencyModal)
+{
+    <partial name="_ChatEmergencyModal" model="Model" />
+}

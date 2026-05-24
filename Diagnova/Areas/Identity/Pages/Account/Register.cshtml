@@ -5,46 +5,1448 @@
     ViewData["BodyClass"] = "dn-auth";
 }
 
-<div class="dn-auth-shell mx-auto">
-    <p class="text-center mb-3">
-        <a class="small link-secondary text-decoration-none fw-semibold" asp-area="" asp-page="/Index">← Back to Diagnova</a>
-    </p>
-    <div class="dn-auth-card card border-0 shadow-sm">
-        <div class="card-body p-4 p-md-5">
-            <p class="small text-uppercase fw-semibold text-success mb-2" style="letter-spacing: 0.12em;">Join Diagnova</p>
-            <h1 class="h3 fw-bold mb-1">Create your account</h1>
-            <p class="text-muted small mb-4">Symptom chat, medicine lookup, and vitals — after you sign in.</p>
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
-            <div asp-validation-summary="ModelOnly" class="text-danger small mb-3" role="alert"></div>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
 
-            <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
-                <div class="mb-3">
-                    <label asp-for="Input.Email" class="form-label small fw-semibold"></label>
-                    <input asp-for="Input.Email" class="form-control form-control-lg rounded-3" autocomplete="username" placeholder="you@example.com" />
-                    <span asp-validation-for="Input.Email" class="text-danger small"></span>
+    body.dn-auth {
+        font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        background: linear-gradient(135deg, #e8f0ec 0%, #dce8e2 100%);
+        color: #1a3a2c;
+        overflow: hidden;
+        height: 100vh;
+    }
+
+    .register-container {
+        height: 100vh;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 1rem 1.5rem 1.5rem 1.5rem;
+    }
+
+    .register-card {
+        max-width: 1350px;
+        width: 100%;
+        background: white;
+        border-radius: 28px;
+        display: flex;
+        flex-wrap: wrap;
+        overflow: hidden;
+        box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        height: auto;
+        max-height: 88vh;
+        margin-top: 1rem;
+    }
+
+    /* Left Sidebar - Balanced */
+    .steps-sidebar {
+        width: 300px;
+        background: linear-gradient(165deg, #1a5c3e 0%, #1e6e45 100%);
+        padding: 1.8rem 1.8rem;
+        position: relative;
+        backdrop-filter: blur(10px);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .steps-sidebar::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.05"><circle cx="20" cy="20" r="8"/><circle cx="80" cy="30" r="12"/><circle cx="50" cy="70" r="10"/><circle cx="15" cy="85" r="6"/><circle cx="90" cy="75" r="9"/></svg>');
+        background-repeat: repeat;
+        pointer-events: none;
+    }
+
+    .logo-area {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 1.8rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        position: relative;
+        z-index: 1;
+    }
+
+    .logo-icon {
+        width: 40px;
+        height: 40px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(5px);
+    }
+
+    .logo-icon i {
+        font-size: 1.2rem;
+        color: white;
+    }
+
+    .logo-text {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: white;
+        letter-spacing: -0.3px;
+    }
+
+    .step-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 0.7rem 0;
+        margin-bottom: 0.2rem;
+        position: relative;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border-radius: 10px;
+    }
+
+    .step-item:hover {
+        background: rgba(255, 255, 255, 0.08);
+        padding-left: 8px;
+    }
+
+    .step-number-circle {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        font-weight: 700;
+        background: rgba(255, 255, 255, 0.15);
+        color: rgba(255, 255, 255, 0.7);
+        transition: all 0.3s;
+        flex-shrink: 0;
+    }
+
+    .step-number-circle.active {
+        background: white;
+        color: #1a5c3e;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .step-number-circle.completed {
+        background: #2d8b5a;
+        color: white;
+    }
+
+    .step-number-circle.completed i {
+        font-size: 0.75rem;
+    }
+
+    .step-info {
+        flex: 1;
+    }
+
+    .step-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 0.15rem;
+    }
+
+    .step-desc {
+        font-size: 0.68rem;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .step-item.active .step-title {
+        color: white;
+    }
+
+    .step-item:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        left: 17px;
+        top: 44px;
+        width: 2px;
+        height: 32px;
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+    .sidebar-quote {
+        margin-top: auto;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.15);
+        position: relative;
+        z-index: 1;
+    }
+
+    .sidebar-quote p {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.7);
+        font-style: italic;
+        line-height: 1.4;
+        margin-bottom: 0.3rem;
+    }
+
+    .sidebar-quote span {
+        font-size: 0.65rem;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    /* Right Side */
+    .form-container {
+        flex: 1;
+        padding: 1.8rem 2rem;
+        background: white;
+        overflow-y: auto;
+        max-height: 88vh;
+    }
+
+    .form-container::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .form-container::-webkit-scrollbar-track {
+        background: #eef2ef;
+        border-radius: 3px;
+    }
+
+    .form-container::-webkit-scrollbar-thumb {
+        background: #c5d5cd;
+        border-radius: 3px;
+    }
+
+    .form-step {
+        display: none;
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    .form-step.active-step {
+        display: block;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(5px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Step Header with Continue Button */
+    .step-header-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.3rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .step-header {
+        flex: 1;
+    }
+
+    .step-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0.25rem 1rem;
+        background: linear-gradient(135deg, rgba(26, 92, 62, 0.1), rgba(45, 139, 90, 0.1));
+        border-radius: 60px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #1a5c3e;
+        margin-bottom: 0.4rem;
+        letter-spacing: 0.5px;
+    }
+
+    .step-header h2 {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #1a3a2c;
+        margin-bottom: 0.2rem;
+        letter-spacing: -0.3px;
+    }
+
+    .step-header p {
+        color: #7a8e82;
+        font-size: 0.8rem;
+    }
+
+    .step-action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0.6rem 1.5rem;
+        background: linear-gradient(135deg, #1a5c3e, #2d8b5a);
+        border: none;
+        border-radius: 40px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: white;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: inherit;
+        box-shadow: 0 2px 6px rgba(26, 92, 62, 0.2);
+        flex-shrink: 0;
+    }
+
+    .step-action-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(26, 92, 62, 0.25);
+    }
+
+    .step-action-btn.prev-btn {
+        background: transparent;
+        color: #6c7e74;
+        border: 1.5px solid #e0e8e3;
+        box-shadow: none;
+    }
+
+    .step-action-btn.prev-btn:hover {
+        border-color: #1a5c3e;
+        color: #1a5c3e;
+        transform: translateX(-2px);
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.9rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .full-width {
+        grid-column: span 2;
+    }
+
+    .form-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #2d473a;
+    }
+
+    .form-label .required {
+        color: #e74c3c;
+        margin-left: 3px;
+    }
+
+    .input-wrapper {
+        position: relative;
+    }
+
+    .input-wrapper i {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9bb3a7;
+        font-size: 0.8rem;
+        z-index: 1;
+        transition: color 0.2s;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.6rem 0.8rem 0.6rem 2.2rem;
+        border: 1.5px solid #e0e8e3;
+        border-radius: 10px;
+        font-size: 0.8rem;
+        transition: all 0.2s;
+        background: #fefefe;
+        font-family: inherit;
+    }
+
+    .form-control:hover {
+        border-color: #b8d0c4;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #1a5c3e;
+        box-shadow: 0 0 0 3px rgba(26, 92, 62, 0.08);
+        background: white;
+    }
+
+    .input-wrapper:focus-within i {
+        color: #1a5c3e;
+    }
+
+    .form-control.error {
+        border-color: #e74c3c;
+    }
+
+    /* Availability Check Styles */
+    .availability-checking {
+        font-size: 0.65rem;
+        color: #f39c12;
+        margin-top: 2px;
+    }
+
+    .availability-available {
+        font-size: 0.65rem;
+        color: #27ae60;
+        margin-top: 2px;
+    }
+
+    .availability-taken {
+        font-size: 0.65rem;
+        color: #e74c3c;
+        margin-top: 2px;
+    }
+
+    /* Password strength indicator */
+    .password-strength {
+        margin-top: 0.2rem;
+    }
+
+    .strength-bar {
+        height: 3px;
+        background: #e0e8e3;
+        border-radius: 2px;
+        overflow: hidden;
+        margin-bottom: 0.2rem;
+    }
+
+    .strength-fill {
+        height: 100%;
+        width: 0;
+        transition: width 0.3s;
+        border-radius: 2px;
+    }
+
+    .strength-fill.weak { background: #e74c3c; width: 33%; }
+    .strength-fill.fair { background: #f39c12; width: 66%; }
+    .strength-fill.strong { background: #27ae60; width: 100%; }
+
+    .strength-text {
+        font-size: 0.65rem;
+        color: #9aaea2;
+    }
+
+    .password-match-status {
+        font-size: 0.65rem;
+        margin-top: 0.2rem;
+    }
+
+    .password-match-status i {
+        font-size: 0.65rem;
+        margin-right: 3px;
+    }
+
+    .match-success {
+        color: #27ae60;
+    }
+
+    .match-error {
+        color: #e74c3c;
+    }
+
+    /* Multi-Select Styles */
+    .multi-select-container {
+        position: relative;
+    }
+
+    .multi-select-trigger {
+        width: 100%;
+        padding: 0.6rem 2rem 0.6rem 2.2rem;
+        border: 1.5px solid #e0e8e3;
+        border-radius: 10px;
+        background: #fefefe;
+        cursor: pointer;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        min-height: 40px;
+        align-items: center;
+        transition: all 0.2s;
+    }
+
+    .multi-select-trigger i {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9bb3a7;
+    }
+
+    .multi-select-trigger .arrow {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9bb3a7;
+        transition: transform 0.2s;
+    }
+
+    .multi-select-trigger.open .arrow {
+        transform: translateY(-50%) rotate(180deg);
+        color: #1a5c3e;
+    }
+
+    .selected-tag {
+        background: linear-gradient(135deg, #e8f3ec, #dcebe2);
+        color: #1a5c3e;
+        padding: 3px 8px;
+        border-radius: 16px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .selected-tag i {
+        position: static;
+        font-size: 0.6rem;
+        cursor: pointer;
+        color: #6b8b7a;
+        transform: none;
+    }
+
+    .multi-select-dropdown {
+        position: absolute;
+        top: calc(100% + 5px);
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1.5px solid #e0e8e3;
+        border-radius: 10px;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 100;
+        display: none;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    }
+
+    .multi-select-dropdown.show {
+        display: block;
+    }
+
+    .dropdown-option {
+        padding: 8px 12px;
+        cursor: pointer;
+        transition: background 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.75rem;
+    }
+
+    .dropdown-option:hover {
+        background: #f5f9f6;
+    }
+
+    .dropdown-option input[type="checkbox"] {
+        width: 14px;
+        height: 14px;
+        cursor: pointer;
+        accent-color: #1a5c3e;
+    }
+
+    .custom-input-area {
+        padding: 8px 12px;
+        border-top: 1px solid #e0e8e3;
+        display: flex;
+        gap: 6px;
+        background: #fafcfb;
+    }
+
+    .custom-input-area input {
+        flex: 1;
+        padding: 5px 8px;
+        border: 1.5px solid #e0e8e3;
+        border-radius: 6px;
+        font-size: 0.75rem;
+    }
+
+    .custom-input-area button {
+        padding: 5px 12px;
+        background: linear-gradient(135deg, #1a5c3e, #2d8b5a);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.7rem;
+    }
+
+    .error-message {
+        font-size: 0.65rem;
+        color: #e74c3c;
+        margin-top: 2px;
+    }
+
+    .hint-text {
+        font-size: 0.6rem;
+        color: #9aaea2;
+        margin-top: 2px;
+    }
+
+    .bmi-card {
+        background: linear-gradient(135deg, #f0f7f2, #e8f3ec);
+        border-radius: 10px;
+        padding: 0.6rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 0.2rem;
+        border: 1px solid rgba(26, 92, 62, 0.1);
+    }
+
+    .bmi-icon {
+        width: 36px;
+        height: 36px;
+        background: white;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .bmi-icon i {
+        font-size: 1rem;
+        color: #1a5c3e;
+    }
+
+    .bmi-info {
+        flex: 1;
+    }
+
+    .bmi-value {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #1a5c3e;
+    }
+
+    .bmi-category {
+        font-size: 0.65rem;
+        color: #6b8b7a;
+    }
+
+    .security-question-area {
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .security-question-area.hidden {
+        display: none;
+    }
+
+    .valid-icon {
+        color: #27ae60;
+        margin-left: 5px;
+    }
+
+    .invalid-icon {
+        color: #e74c3c;
+        margin-left: 5px;
+    }
+
+    @@media (max-width: 900px) {
+        .steps-sidebar {
+            display: none;
+        }
+        
+        .register-card {
+            max-width: 550px;
+        }
+        
+        .form-container {
+            padding: 1.5rem;
+        }
+        
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .full-width {
+            grid-column: span 1;
+        }
+        
+        .step-header-wrapper {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .step-action-btn {
+            align-self: flex-start;
+        }
+    }
+</style>
+
+<div class="register-container">
+    <div class="register-card">
+        <!-- Left Sidebar -->
+        <div class="steps-sidebar">
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <i class="fas fa-stethoscope"></i>
                 </div>
-                <div class="mb-3">
-                    <label asp-for="Input.Password" class="form-label small fw-semibold"></label>
-                    <input asp-for="Input.Password" class="form-control form-control-lg rounded-3" autocomplete="new-password" />
-                    <span asp-validation-for="Input.Password" class="text-danger small"></span>
+                <span class="logo-text">Diagnova</span>
+            </div>
+
+            <div class="steps-list">
+                <div class="step-item" data-step="0">
+                    <div class="step-number-circle" id="step1Num">1</div>
+                    <div class="step-info">
+                        <div class="step-title">Personal Information</div>
+                        <div class="step-desc">Your basic details</div>
+                    </div>
                 </div>
-                <div class="mb-4">
-                    <label asp-for="Input.ConfirmPassword" class="form-label small fw-semibold"></label>
-                    <input asp-for="Input.ConfirmPassword" class="form-control form-control-lg rounded-3" autocomplete="new-password" />
-                    <span asp-validation-for="Input.ConfirmPassword" class="text-danger small"></span>
+                <div class="step-item" data-step="1">
+                    <div class="step-number-circle" id="step2Num">2</div>
+                    <div class="step-info">
+                        <div class="step-title">Health Metrics</div>
+                        <div class="step-desc">Body & vitals</div>
+                    </div>
                 </div>
-                <button type="submit" class="btn dn-btn-success w-100 rounded-pill py-2 fw-semibold">Register</button>
+                <div class="step-item" data-step="2">
+                    <div class="step-number-circle" id="step3Num">3</div>
+                    <div class="step-info">
+                        <div class="step-title">Medical History</div>
+                        <div class="step-desc">Conditions & allergies</div>
+                    </div>
+                </div>
+                <div class="step-item" data-step="3">
+                    <div class="step-number-circle" id="step4Num">4</div>
+                    <div class="step-info">
+                        <div class="step-title">Health Goals</div>
+                        <div class="step-desc">Your wellness targets</div>
+                    </div>
+                </div>
+                <div class="step-item" data-step="4">
+                    <div class="step-number-circle" id="step5Num">5</div>
+                    <div class="step-info">
+                        <div class="step-title">Emergency & Security</div>
+                        <div class="step-desc">Safety & recovery</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-quote">
+                <p>"Your health journey matters. We're here to guide you every step of the way."</p>
+                <span>— Diagnova Care Team</span>
+            </div>
+        </div>
+
+        <!-- Right Side Form -->
+        <div class="form-container">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger small mb-2"></div>
+            <div id="formErrorBanner" class="alert alert-danger small mb-2 d-none" role="alert"></div>
+
+            <form id="registerForm" method="post">
+
+                <!-- Step 1: Personal Info -->
+                <div class="form-step active-step" data-step="0">
+                    <div class="step-header-wrapper">
+                        <div class="step-header">
+                            <span class="step-badge"><i class="fas fa-user-circle"></i> Step 1/5</span>
+                            <h2>Personal Information</h2>
+                            <p>Let's get to know you better</p>
+                        </div>
+                        <button type="button" class="step-action-btn" id="nextBtn1">Continue <i class="fas fa-arrow-right"></i></button>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label class="form-label">Full Name <span class="required">*</span></label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-user"></i>
+                                <input asp-for="Input.FullName" class="form-control" placeholder="Enter your full name" data-required="true" />
+                            </div>
+                            <span asp-validation-for="Input.FullName" class="error-message"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Username <span class="required">*</span></label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-at"></i>
+                                <input asp-for="Input.Username" class="form-control" id="username" placeholder="@@username" data-required="true" />
+                            </div>
+                            <span asp-validation-for="Input.Username" class="error-message"></span>
+                            <div id="usernameAvailability" class="availability-checking">Enter at least 3 characters to check availability</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email Address <span class="required">*</span></label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-envelope"></i>
+                                <input asp-for="Input.Email" class="form-control" id="email" placeholder="hello@example.com" data-required="true" />
+                            </div>
+                            <span asp-validation-for="Input.Email" class="error-message"></span>
+                            <div id="emailAvailability" class="availability-checking">Enter your email to check availability</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Date of Birth <span class="required">*</span></label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-calendar-alt"></i>
+                                <input asp-for="Input.DateOfBirth" type="date" class="form-control" data-required="true" />
+                            </div>
+                            <span asp-validation-for="Input.DateOfBirth" class="error-message"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Gender <span class="required">*</span></label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-venus-mars"></i>
+                                <select asp-for="Input.Gender" class="form-control" data-required="true">
+                                    <option value="">Select gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                    <option value="Prefer not to say">Prefer not to say</option>
+                                </select>
+                            </div>
+                            <span asp-validation-for="Input.Gender" class="error-message"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Password <span class="required">*</span></label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-lock"></i>
+                                <input asp-for="Input.Password" type="password" class="form-control" id="password" placeholder="Create a strong password" data-required="true" />
+                            </div>
+                            <span asp-validation-for="Input.Password" class="error-message"></span>
+                            <div class="password-strength" id="passwordStrength">
+                                <div class="strength-bar">
+                                    <div class="strength-fill" id="strengthFill"></div>
+                                </div>
+                                <div class="strength-text" id="strengthText">Enter a password</div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Confirm Password <span class="required">*</span></label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-check-circle"></i>
+                                <input asp-for="Input.ConfirmPassword" type="password" class="form-control" id="confirmPassword" placeholder="Confirm your password" data-required="true" />
+                            </div>
+                            <span asp-validation-for="Input.ConfirmPassword" class="error-message"></span>
+                            <div class="password-match-status" id="matchStatus"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Health Metrics -->
+                <div class="form-step" data-step="1">
+                    <div class="step-header-wrapper">
+                        <div class="step-header">
+                            <span class="step-badge"><i class="fas fa-heartbeat"></i> Step 2/5</span>
+                            <h2>Physical Health Metrics</h2>
+                            <p>Help us understand your body composition</p>
+                        </div>
+                        <div style="display: flex; gap: 0.8rem;">
+                            <button type="button" class="step-action-btn prev-btn" id="prevBtn2"><i class="fas fa-arrow-left"></i> Back</button>
+                            <button type="button" class="step-action-btn" id="nextBtn2">Continue <i class="fas fa-arrow-right"></i></button>
+                        </div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Weight (kg) <span class="required">*</span></label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-weight-scale"></i>
+                                <input asp-for="Input.WeightKg" type="number" step="0.1" class="form-control" id="weightInput" placeholder="68.5" data-required="true" />
+                            </div>
+                            <span asp-validation-for="Input.WeightKg" class="error-message"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Height (cm) <span class="required">*</span></label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-ruler"></i>
+                                <input asp-for="Input.HeightCm" type="number" step="0.1" class="form-control" id="heightInput" placeholder="165" data-required="true" />
+                            </div>
+                            <span asp-validation-for="Input.HeightCm" class="error-message"></span>
+                        </div>
+                        <div class="form-group full-width">
+                            <label class="form-label">BMI Preview</label>
+                            <div class="bmi-card">
+                                <div class="bmi-icon">
+                                    <i class="fas fa-calculator"></i>
+                                </div>
+                                <div class="bmi-info">
+                                    <div class="bmi-value" id="bmiValue">—</div>
+                                    <div class="bmi-category" id="bmiCategory">Enter weight and height</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Blood Type</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-tint"></i>
+                                <select asp-for="Input.BloodType" class="form-control">
+                                    <option value="">Select blood type</option>
+                                    <option value="A+">A+</option><option value="A-">A-</option>
+                                    <option value="B+">B+</option><option value="B-">B-</option>
+                                    <option value="AB+">AB+</option><option value="AB-">AB-</option>
+                                    <option value="O+">O+</option><option value="O-">O-</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Medical History -->
+                <div class="form-step" data-step="2">
+                    <div class="step-header-wrapper">
+                        <div class="step-header">
+                            <span class="step-badge"><i class="fas fa-notes-medical"></i> Step 3/5</span>
+                            <h2>Medical Background</h2>
+                            <p>This information is kept strictly confidential</p>
+                        </div>
+                        <div style="display: flex; gap: 0.8rem;">
+                            <button type="button" class="step-action-btn prev-btn" id="prevBtn3"><i class="fas fa-arrow-left"></i> Back</button>
+                            <button type="button" class="step-action-btn" id="nextBtn3">Continue <i class="fas fa-arrow-right"></i></button>
+                        </div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label class="form-label">Pre-existing Conditions</label>
+                            <div class="multi-select-container" data-target="conditions">
+                                <div class="multi-select-trigger">
+                                    <i class="fas fa-notes-medical"></i>
+                                    <div class="selected-tags" id="conditionsTags"></div>
+                                    <i class="fas fa-chevron-down arrow"></i>
+                                </div>
+                                <div class="multi-select-dropdown">
+                                    <div class="dropdown-option" data-value="Diabetes"><input type="checkbox" /> Diabetes</div>
+                                    <div class="dropdown-option" data-value="Hypertension"><input type="checkbox" /> Hypertension</div>
+                                    <div class="dropdown-option" data-value="Asthma"><input type="checkbox" /> Asthma</div>
+                                    <div class="dropdown-option" data-value="Heart Disease"><input type="checkbox" /> Heart Disease</div>
+                                    <div class="dropdown-option" data-value="Arthritis"><input type="checkbox" /> Arthritis</div>
+                                    <div class="dropdown-option" data-value="Thyroid Disorder"><input type="checkbox" /> Thyroid Disorder</div>
+                                    <div class="custom-input-area">
+                                        <input type="text" placeholder="Add custom condition..." id="customConditionInput" />
+                                        <button type="button" onclick="addCustomCondition('conditions')">Add</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="hidden" asp-for="Input.PreExistingConditions" id="conditionsHidden" />
+                            <div class="hint-text">Select from list or type your own</div>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label class="form-label">Allergies</label>
+                            <div class="multi-select-container" data-target="allergies">
+                                <div class="multi-select-trigger">
+                                    <i class="fas fa-allergies"></i>
+                                    <div class="selected-tags" id="allergiesTags"></div>
+                                    <i class="fas fa-chevron-down arrow"></i>
+                                </div>
+                                <div class="multi-select-dropdown">
+                                    <div class="dropdown-option" data-value="Penicillin"><input type="checkbox" /> Penicillin</div>
+                                    <div class="dropdown-option" data-value="Sulfa Drugs"><input type="checkbox" /> Sulfa Drugs</div>
+                                    <div class="dropdown-option" data-value="Latex"><input type="checkbox" /> Latex</div>
+                                    <div class="dropdown-option" data-value="Peanuts"><input type="checkbox" /> Peanuts</div>
+                                    <div class="dropdown-option" data-value="Shellfish"><input type="checkbox" /> Shellfish</div>
+                                    <div class="dropdown-option" data-value="Dairy"><input type="checkbox" /> Dairy</div>
+                                    <div class="custom-input-area">
+                                        <input type="text" placeholder="Add custom allergy..." id="customAllergyInput" />
+                                        <button type="button" onclick="addCustomCondition('allergies')">Add</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="hidden" asp-for="Input.Allergies" id="allergiesHidden" />
+                            <div class="hint-text">Select from list or type your own</div>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label class="form-label">Current Medications</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-capsules"></i>
+                                <textarea asp-for="Input.CurrentMedications" class="form-control" rows="2" placeholder="List any medications you're currently taking..."></textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Smoking Habit</label>
+                            <select asp-for="Input.SmokingHabit" class="form-control">
+                                <option value="Never">Never</option>
+                                <option value="Former">Former smoker</option>
+                                <option value="Occasional">Occasional</option>
+                                <option value="Regular">Regular</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Alcohol Habit</label>
+                            <select asp-for="Input.AlcoholHabit" class="form-control">
+                                <option value="Never">Never</option>
+                                <option value="Social">Social</option>
+                                <option value="Moderate">Moderate</option>
+                                <option value="Heavy">Heavy</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Health Goals -->
+                <div class="form-step" data-step="3">
+                    <div class="step-header-wrapper">
+                        <div class="step-header">
+                            <span class="step-badge"><i class="fas fa-bullseye"></i> Step 4/5</span>
+                            <h2>Health Goals</h2>
+                            <p>Tell us what you want to achieve</p>
+                        </div>
+                        <div style="display: flex; gap: 0.8rem;">
+                            <button type="button" class="step-action-btn prev-btn" id="prevBtn4"><i class="fas fa-arrow-left"></i> Back</button>
+                            <button type="button" class="step-action-btn" id="nextBtn4">Continue <i class="fas fa-arrow-right"></i></button>
+                        </div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label class="form-label">Primary Health Goal</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-bullseye"></i>
+                                <select asp-for="Input.PrimaryGoal" class="form-control">
+                                    <option value="general wellness">General Wellness</option>
+                                    <option value="lose weight">Lose Weight</option>
+                                    <option value="gain muscle">Gain Muscle</option>
+                                    <option value="manage condition">Manage a Medical Condition</option>
+                                    <option value="improve fitness">Improve Fitness</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group full-width">
+                            <label class="form-label">Activity Level</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-heartbeat"></i>
+                                <select asp-for="Input.ActivityLevel" class="form-control">
+                                    <option value="Sedentary">Sedentary — Little to no exercise</option>
+                                    <option value="Lightly active">Lightly active — 1-3 days/week</option>
+                                    <option value="Moderately active">Moderately active — 3-5 days/week</option>
+                                    <option value="Very active">Very active — 6-7 days/week</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 5: Emergency & Security -->
+                <div class="form-step" data-step="4">
+                    <div class="step-header-wrapper">
+                        <div class="step-header">
+                            <span class="step-badge"><i class="fas fa-shield-alt"></i> Step 5/5</span>
+                            <h2>Emergency & Security</h2>
+                            <p>Almost there! Add your safety information</p>
+                        </div>
+                        <div style="display: flex; gap: 0.8rem;">
+                            <button type="button" class="step-action-btn prev-btn" id="prevBtn5"><i class="fas fa-arrow-left"></i> Back</button>
+                            <button type="submit" class="step-action-btn" id="submitBtn">Create Account <i class="fas fa-check"></i></button>
+                        </div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Emergency Contact Name</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-user-friends"></i>
+                                <input asp-for="Input.EmergencyContactName" class="form-control" placeholder="Full name" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Emergency Contact Email</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-envelope"></i>
+                                <input asp-for="Input.EmergencyContactEmail" type="email" class="form-control" placeholder="emergency@example.com" />
+                            </div>
+                            <div class="hint-text">This email will receive alerts during medical emergencies</div>
+                        </div>
+                        <div class="form-group full-width">
+                            <label class="form-label">Emergency contact phone (optional)</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-phone"></i>
+                                <input asp-for="Input.EmergencyContactPhone" type="tel" class="form-control" placeholder="+92 300 1234567" />
+                            </div>
+                            <div class="hint-text">Enables one-tap SOS via SMS on supported devices</div>
+                        </div>
+                        <div class="form-group full-width">
+                            <label class="form-label">Country / Region</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-globe"></i>
+                                <input asp-for="Input.CountryRegion" class="form-control" placeholder="e.g., Pakistan, USA, UK" />
+                            </div>
+                            <div class="hint-text">Used for localized recommendations</div>
+                        </div>
+                        <div class="form-group full-width security-question-area" id="securityQuestionArea">
+                            <label class="form-label">Security Question (Optional)</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-question-circle"></i>
+                                <input asp-for="Input.SecurityQuestion" class="form-control" placeholder="e.g., What was your first pet's name?" />
+                            </div>
+                            <div class="form-group" style="margin-top: 0.5rem;">
+                                <label class="form-label">Security Answer (Optional)</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-key"></i>
+                                    <input asp-for="Input.SecurityAnswer" class="form-control" placeholder="Your answer" />
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </form>
-
-            <hr class="my-4 text-muted opacity-25" />
-
-            <p class="small text-center text-muted mb-0">
-                Already have an account?
-                <a class="link-success text-decoration-none fw-semibold" asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl">Sign in</a>
-            </p>
         </div>
     </div>
 </div>
+
+<script>
+    let currentStep = 0;
+    const totalSteps = 5;
+    const forms = document.querySelectorAll('.form-step');
+    const stepItems = document.querySelectorAll('.step-item');
+    let usernameCheckTimeout;
+    let emailCheckTimeout;
+
+    class MultiSelectManager {
+        constructor(containerId, hiddenFieldId, tagsContainerId) {
+            this.container = document.querySelector(`.multi-select-container[data-target="${containerId}"]`);
+            this.hiddenField = document.getElementById(hiddenFieldId);
+            this.tagsContainer = document.getElementById(tagsContainerId);
+            this.selectedValues = new Set();
+            if (this.container) {
+                this.trigger = this.container.querySelector('.multi-select-trigger');
+                this.dropdown = this.container.querySelector('.multi-select-dropdown');
+                this.init();
+            }
+        }
+        init() {
+            this.trigger.addEventListener('click', (e) => { e.stopPropagation(); this.dropdown.classList.toggle('show'); this.trigger.classList.toggle('open'); });
+            this.dropdown.querySelectorAll('.dropdown-option').forEach(option => {
+                const checkbox = option.querySelector('input[type="checkbox"]');
+                const value = option.dataset.value;
+                option.addEventListener('click', (e) => { if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') { checkbox.checked = !checkbox.checked; if (checkbox.checked) this.selectedValues.add(value); else this.selectedValues.delete(value); this.updateDisplay(); } });
+                checkbox.addEventListener('change', () => { if (checkbox.checked) this.selectedValues.add(value); else this.selectedValues.delete(value); this.updateDisplay(); });
+            });
+            document.addEventListener('click', (e) => { if (!this.container.contains(e.target)) { this.dropdown.classList.remove('show'); this.trigger.classList.remove('open'); } });
+        }
+        addCustomValue(value) {
+            if (value && !this.selectedValues.has(value)) {
+                this.selectedValues.add(value);
+                this.updateDisplay();
+                const newOption = document.createElement('div');
+                newOption.className = 'dropdown-option';
+                newOption.dataset.value = value;
+                newOption.innerHTML = `<input type="checkbox" checked /> ${value}`;
+                const customArea = this.dropdown.querySelector('.custom-input-area');
+                this.dropdown.insertBefore(newOption, customArea);
+                const checkbox = newOption.querySelector('input');
+                newOption.addEventListener('click', (e) => { if (e.target.tagName !== 'INPUT') { checkbox.checked = !checkbox.checked; if (checkbox.checked) this.selectedValues.add(value); else this.selectedValues.delete(value); this.updateDisplay(); } });
+                checkbox.addEventListener('change', () => { if (checkbox.checked) this.selectedValues.add(value); else this.selectedValues.delete(value); this.updateDisplay(); });
+            }
+        }
+        updateDisplay() {
+            this.tagsContainer.innerHTML = '';
+            this.selectedValues.forEach(value => { const tag = document.createElement('span'); tag.className = 'selected-tag'; tag.innerHTML = `${value} <i class="fas fa-times" onclick="window.multiSelects['${this.container.dataset.target}'].removeValue('${value}')"></i>`; this.tagsContainer.appendChild(tag); });
+            this.hiddenField.value = Array.from(this.selectedValues).join(',');
+            this.dropdown.querySelectorAll('.dropdown-option').forEach(option => { const checkbox = option.querySelector('input[type="checkbox"]'); if (checkbox && option.dataset.value) checkbox.checked = this.selectedValues.has(option.dataset.value); });
+        }
+        removeValue(value) { this.selectedValues.delete(value); this.updateDisplay(); }
+    }
+    
+    window.multiSelects = {};
+    window.multiSelects['conditions'] = new MultiSelectManager('conditions', 'conditionsHidden', 'conditionsTags');
+    window.multiSelects['allergies'] = new MultiSelectManager('allergies', 'allergiesHidden', 'allergiesTags');
+    
+    function addCustomCondition(type) { const input = document.getElementById(type === 'conditions' ? 'customConditionInput' : 'customAllergyInput'); const value = input.value.trim(); if (value) { window.multiSelects[type].addCustomValue(value); input.value = ''; } }
+    window.addCustomCondition = addCustomCondition;
+    
+    // Username availability check
+    const usernameInput = document.getElementById('username');
+    const usernameAvailabilityDiv = document.getElementById('usernameAvailability');
+    
+    function isValidEmailFormat(email) {
+        return /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/.test(email);
+    }
+
+    function showFormError(message) {
+        const banner = document.getElementById('formErrorBanner');
+        if (!banner) return;
+        if (!message) {
+            banner.classList.add('d-none');
+            banner.textContent = '';
+            return;
+        }
+        banner.textContent = message;
+        banner.classList.remove('d-none');
+        banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    async function checkUsernameAvailability() {
+        const username = usernameInput?.value.trim();
+        if (!username || username.length < 3) {
+            usernameAvailabilityDiv.innerHTML = '<i class="fas fa-info-circle"></i> Username must be at least 3 characters';
+            usernameAvailabilityDiv.className = 'availability-checking';
+            return false;
+        }
+        
+        usernameAvailabilityDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Checking availability...';
+        usernameAvailabilityDiv.className = 'availability-checking';
+        
+        try {
+            const response = await fetch(`/api/check-username?username=${encodeURIComponent(username)}`);
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            const data = await response.json();
+            const available = data.available === true || data.Available === true;
+            
+            if (available) {
+                usernameAvailabilityDiv.innerHTML = '<i class="fas fa-check-circle"></i> Username is available!';
+                usernameAvailabilityDiv.className = 'availability-available';
+                return true;
+            } else {
+                usernameAvailabilityDiv.innerHTML = '<i class="fas fa-times-circle"></i> Username is already taken — choose another';
+                usernameAvailabilityDiv.className = 'availability-taken';
+                return false;
+            }
+        } catch (error) {
+            usernameAvailabilityDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Could not verify username — try again';
+            usernameAvailabilityDiv.className = 'availability-checking';
+            return false;
+        }
+    }
+    
+    // Email availability check
+    const emailInput = document.getElementById('email');
+    const emailAvailabilityDiv = document.getElementById('emailAvailability');
+    
+    async function checkEmailAvailability() {
+        const email = emailInput?.value.trim();
+        if (!email || !isValidEmailFormat(email)) {
+            emailAvailabilityDiv.innerHTML = '<i class="fas fa-info-circle"></i> Enter a valid email address';
+            emailAvailabilityDiv.className = 'availability-checking';
+            return false;
+        }
+        
+        emailAvailabilityDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Checking availability...';
+        emailAvailabilityDiv.className = 'availability-checking';
+        
+        try {
+            const response = await fetch(`/api/check-email?email=${encodeURIComponent(email)}`);
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            const data = await response.json();
+            const available = data.available === true || data.Available === true;
+            
+            if (available) {
+                emailAvailabilityDiv.innerHTML = '<i class="fas fa-check-circle"></i> Email is available!';
+                emailAvailabilityDiv.className = 'availability-available';
+                return true;
+            } else {
+                emailAvailabilityDiv.innerHTML = '<i class="fas fa-times-circle"></i> Email is already registered — <a href="/Identity/Account/Login">sign in</a> or use another email';
+                emailAvailabilityDiv.className = 'availability-taken';
+                return false;
+            }
+        } catch (error) {
+            emailAvailabilityDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Could not verify email — try again';
+            emailAvailabilityDiv.className = 'availability-checking';
+            return false;
+        }
+    }
+    
+    // Debounced checks
+    if (usernameInput) {
+        usernameInput.addEventListener('input', () => {
+            clearTimeout(usernameCheckTimeout);
+            usernameCheckTimeout = setTimeout(checkUsernameAvailability, 500);
+        });
+    }
+    
+    if (emailInput) {
+        emailInput.addEventListener('input', () => {
+            clearTimeout(emailCheckTimeout);
+            emailCheckTimeout = setTimeout(checkEmailAvailability, 500);
+        });
+    }
+    
+    // Password strength
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    const strengthFill = document.getElementById('strengthFill');
+    const strengthText = document.getElementById('strengthText');
+    const matchStatus = document.getElementById('matchStatus');
+    
+    function checkPasswordStrength() {
+        const password = passwordInput?.value || '';
+        let strength = 0;
+        if (password.length >= 8) strength++;
+        if (password.match(/[a-z]/) && password.match(/[A-Z]/)) strength++;
+        if (password.match(/[0-9]/)) strength++;
+        if (password.match(/[^a-zA-Z0-9]/)) strength++;
+        if (password.length === 0) { strengthFill.className = 'strength-fill'; strengthFill.style.width = '0'; strengthText.textContent = 'Enter a password'; }
+        else if (strength <= 1) { strengthFill.className = 'strength-fill weak'; strengthText.textContent = 'Weak password'; }
+        else if (strength === 2) { strengthFill.className = 'strength-fill fair'; strengthText.textContent = 'Fair password'; }
+        else { strengthFill.className = 'strength-fill strong'; strengthText.textContent = 'Strong password'; }
+        checkPasswordMatch();
+    }
+    
+    function checkPasswordMatch() {
+        const password = passwordInput?.value || '';
+        const confirmPassword = confirmPasswordInput?.value || '';
+        if (confirmPassword.length === 0) { matchStatus.innerHTML = ''; matchStatus.className = 'password-match-status'; }
+        else if (password === confirmPassword) { matchStatus.innerHTML = '<i class="fas fa-check-circle"></i> Passwords match'; matchStatus.className = 'password-match-status match-success'; }
+        else { matchStatus.innerHTML = '<i class="fas fa-times-circle"></i> Passwords do not match'; matchStatus.className = 'password-match-status match-error'; }
+    }
+    
+    if (passwordInput) passwordInput.addEventListener('input', checkPasswordStrength);
+    if (confirmPasswordInput) confirmPasswordInput.addEventListener('input', checkPasswordMatch);
+    
+    function updateUI() {
+        forms.forEach((form, idx) => form.classList.toggle('active-step', idx === currentStep));
+        stepItems.forEach((item, idx) => {
+            const circle = item.querySelector('.step-number-circle');
+            if (idx < currentStep) { circle.innerHTML = '<i class="fas fa-check"></i>'; circle.classList.add('completed'); circle.classList.remove('active'); }
+            else if (idx === currentStep) { circle.innerHTML = (idx + 1).toString(); circle.classList.add('active'); circle.classList.remove('completed'); }
+            else { circle.innerHTML = (idx + 1).toString(); circle.classList.remove('active', 'completed'); }
+        });
+        document.querySelector('.form-container').scrollTop = 0;
+    }
+    
+    function validateStep(stepIndex) {
+        const form = forms[stepIndex];
+        if (!form) return true;
+        const requiredFields = form.querySelectorAll('[data-required="true"]');
+        let isValid = true;
+        requiredFields.forEach(field => {
+            const empty = !field.value || String(field.value).trim() === '';
+            if (empty) {
+                field.classList.add('error');
+                isValid = false;
+            } else {
+                field.classList.remove('error');
+            }
+        });
+        if (stepIndex === 0) {
+            const password = passwordInput?.value || '';
+            const confirmPassword = confirmPasswordInput?.value || '';
+            if (password.length < 6) {
+                if (passwordInput) passwordInput.classList.add('error');
+                isValid = false;
+            }
+            if (password !== confirmPassword) {
+                if (confirmPasswordInput) confirmPasswordInput.classList.add('error');
+                isValid = false;
+            }
+        }
+        if (stepIndex === 1) {
+            const weight = parseFloat(weightInput?.value);
+            const height = parseFloat(heightInput?.value);
+            if (!weight || weight <= 0) {
+                if (weightInput) weightInput.classList.add('error');
+                isValid = false;
+            }
+            if (!height || height <= 0) {
+                if (heightInput) heightInput.classList.add('error');
+                isValid = false;
+            }
+        }
+        return isValid;
+    }
+
+    function validateCurrentStep() {
+        const isValid = validateStep(currentStep);
+        if (!isValid) {
+            const currentForm = forms[currentStep];
+            const firstError = currentForm?.querySelector('.error');
+            if (firstError) firstError.focus();
+        }
+        return isValid;
+    }
+
+    function validateAllSteps() {
+        for (let i = 0; i < forms.length; i++) {
+            if (!validateStep(i)) {
+                currentStep = i;
+                updateUI();
+                const firstError = forms[i].querySelector('.error');
+                if (firstError) firstError.focus();
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    // BMI Calculator
+    const weightInput = document.getElementById('weightInput');
+    const heightInput = document.getElementById('heightInput');
+    const bmiValue = document.getElementById('bmiValue');
+    const bmiCategory = document.getElementById('bmiCategory');
+    function calculateBMI() {
+        const weight = parseFloat(weightInput?.value);
+        const height = parseFloat(heightInput?.value);
+        if (weight && height && height > 0) { const bmi = weight / ((height / 100) ** 2); bmiValue.textContent = bmi.toFixed(1); if (bmi < 18.5) bmiCategory.textContent = 'Underweight'; else if (bmi < 25) bmiCategory.textContent = 'Normal weight ✓'; else if (bmi < 30) bmiCategory.textContent = 'Overweight'; else bmiCategory.textContent = 'Obese'; }
+        else { bmiValue.textContent = '—'; bmiCategory.textContent = 'Enter weight and height'; }
+    }
+    if (weightInput && heightInput) { weightInput.addEventListener('input', calculateBMI); heightInput.addEventListener('input', calculateBMI); calculateBMI(); }
+    
+    // Security question toggle (removed recovery method since we only use email OTP)
+    const securityArea = document.getElementById('securityQuestionArea');
+    if (securityArea) { securityArea.style.display = 'block'; }
+    
+    // Navigation
+    function goNext() {
+        if (!validateCurrentStep()) {
+            showFormError('Please fill in all required fields on this step.');
+            return;
+        }
+        showFormError('');
+        if (currentStep < totalSteps - 1) {
+            currentStep++;
+            updateUI();
+        }
+    }
+
+    document.getElementById('nextBtn1')?.addEventListener('click', goNext);
+    document.getElementById('nextBtn2')?.addEventListener('click', goNext);
+    document.getElementById('nextBtn3')?.addEventListener('click', goNext);
+    document.getElementById('nextBtn4')?.addEventListener('click', goNext);
+    document.getElementById('prevBtn2')?.addEventListener('click', () => { if (currentStep > 0) { currentStep--; updateUI(); } });
+    document.getElementById('prevBtn3')?.addEventListener('click', () => { if (currentStep > 0) { currentStep--; updateUI(); } });
+    document.getElementById('prevBtn4')?.addEventListener('click', () => { if (currentStep > 0) { currentStep--; updateUI(); } });
+    document.getElementById('prevBtn5')?.addEventListener('click', () => { if (currentStep > 0) { currentStep--; updateUI(); } });
+    document.getElementById('submitBtn')?.addEventListener('click', async (e) => { 
+        e.preventDefault();
+        showFormError('');
+
+        if (!validateAllSteps()) {
+            showFormError('Please complete all required fields on every step (highlighted in red).');
+            return;
+        }
+
+        const isUsernameAvailable = await checkUsernameAvailability();
+        if (!isUsernameAvailable) {
+            currentStep = 0;
+            updateUI();
+            showFormError('Username is unavailable or invalid. See the message under Username on step 1.');
+            usernameInput?.focus();
+            return;
+        }
+
+        const isEmailAvailable = await checkEmailAvailability();
+        if (!isEmailAvailable) {
+            currentStep = 0;
+            updateUI();
+            showFormError('Email is invalid or already registered. Sign in or use a different email on step 1.');
+            emailInput?.focus();
+            return;
+        }
+
+        document.getElementById('registerForm').submit();
+    });
+    
+    document.querySelectorAll('.form-control').forEach(field => { field.addEventListener('input', () => field.classList.remove('error')); });
+    updateUI();
+</script>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

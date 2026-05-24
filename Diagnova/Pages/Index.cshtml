@@ -5,70 +5,651 @@
     ViewData["BodyClass"] = "dn-landing";
 }
 
-<section class="dn-hero text-center">
-    <div class="container col-xl-9">
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+
+<style>
+    /* Reset and base */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    /* Hero Section */
+    .dn-hero {
+        padding: 3rem 1rem 2rem 1rem;
+        background: linear-gradient(135deg, #ffffff 0%, #fafdf8 100%);
+        text-align: center;
+    }
+    
+        .dn-hero .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+    
+    .dn-hero-title {
+        font-size: 3.5rem;
+        font-weight: 700;
+        line-height: 1.2;
+        color: #000000 !important;
+        letter-spacing: -0.02em;
+        margin-bottom: 1rem;
+    }
+    
+    @@media (min-width: 768px) {
+        .dn-hero-title {
+            font-size: 4rem;
+        }
+    }
+    
+    .dn-hero-sub {
+        font-size: 1.1rem;
+        color: #5a7a6a;
+        line-height: 1.6;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    /* Buttons */
+    .dn-btn-success {
+        background: linear-gradient(135deg, #1e7b47 0%, #259e5a 100%);
+        border: none;
+        padding: 0.85rem 2rem;
+        border-radius: 48px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        color: white;
+        box-shadow: 0 4px 12px rgba(30, 123, 71, 0.2);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+        .dn-btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(30, 123, 71, 0.3);
+            background: linear-gradient(135deg, #166c3e 0%, #1e8a4f 100%);
+            color: white;
+        }
+    
+    .dn-btn-outline-success {
+        background: transparent;
+        border: 2px solid #2c9c60;
+        color: #1e6e43;
+        padding: 0.85rem 2rem;
+        border-radius: 48px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+        .dn-btn-outline-success:hover {
+            background: rgba(44, 156, 96, 0.08);
+            border-color: #1e7b47;
+            transform: translateY(-2px);
+            color: #0e4f2f;
+        }
+    
+    /* Category Cards */
+    .category-section {
+        padding: 2rem 1rem;
+    }
+    
+        .category-section .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+    
+    .dn-category-track {
+        width: 100%;
+        margin: 0 auto;
+    }
+    
+    .dn-category-scroll {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 1.5rem;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .dn-category-card {
+        flex: 0 0 auto;
+        width: 160px;
+        background: white;
+        border-radius: 24px;
+        padding: 1.5rem 0.8rem;
+        text-align: center;
+        text-decoration: none;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border: 1px solid #eaf1ec;
+    }
+    
+        .dn-category-card:hover {
+            transform: translateY(-6px);
+            border-color: #c5e0cf;
+            box-shadow: 0 12px 24px rgba(45, 122, 78, 0.1);
+        }
+    
+    .dn-cat-icon {
+        background: #f0f7f2;
+        width: 56px;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 28px;
+        margin: 0 auto 0.8rem;
+        transition: all 0.3s ease;
+    }
+    
+    .dn-category-card:hover .dn-cat-icon {
+        background: #e2f0e8;
+        transform: scale(1.05);
+    }
+    
+    .dn-cat-icon i {
+        font-size: 1.8rem;
+        color: #2d8b5a;
+    }
+    
+    .dn-cat-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-weight: 700;
+        color: #529b74;
+        margin-bottom: 0.5rem;
+    }
+    
+    .dn-composer-hint {
+        background: #edf4ef;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0.8rem 2rem;
+        border-radius: 60px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #2b6e46;
+        transition: all 0.3s ease;
+        margin: 0 auto;
+    }
+    
+        .dn-composer-hint:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+    
+    /* Section 1: Features Showcase */
+    .features-section {
+        background: linear-gradient(135deg, #f8fbf6 0%, #f2f8f0 100%);
+        border-radius: 32px;
+        padding: 3rem 2rem;
+        margin: 2rem auto;
+        max-width: 1280px;
+    }
+    
+    .section-badge {
+        display: inline-block;
+        padding: 0.4rem 1.2rem;
+        background: rgba(45, 139, 90, 0.12);
+        border-radius: 60px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #2d8b5a;
+        letter-spacing: 0.5px;
+        margin-bottom: 1rem;
+    }
+    
+    .section-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1a3a2c;
+        margin-bottom: 1rem;
+    }
+    
+    .section-subtitle {
+        font-size: 1rem;
+        color: #6b8b7a;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+        margin-top: 3rem;
+    }
+    
+    .feature-card {
+        background: white;
+        border-radius: 20px;
+        padding: 1.8rem;
+        transition: all 0.3s ease;
+        border: 1px solid #eef3ef;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+        text-align: center;
+    }
+    
+        .feature-card:hover {
+            transform: translateY(-4px);
+            border-color: #c5e0cf;
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.06);
+        }
+    
+    .feature-icon {
+        width: 64px;
+        height: 64px;
+        background: linear-gradient(135deg, #f0f7f2, #e3f0e8);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.2rem;
+    }
+    
+        .feature-icon i {
+            font-size: 1.8rem;
+            color: #2d8b5a;
+        }
+    
+    .feature-card h3 {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        color: #1a3a2c;
+    }
+    
+    .feature-card p {
+        color: #7a9a88;
+        line-height: 1.6;
+        font-size: 0.9rem;
+    }
+    
+    /* Section 2: How It Works */
+    .how-it-works {
+        margin: 3rem auto;
+        max-width: 1280px;
+        padding: 0 15px;
+    }
+    
+    .steps-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+        margin-top: 3rem;
+    }
+    
+    .step-card {
+        text-align: center;
+        padding: 1.5rem;
+        position: relative;
+    }
+    
+    .step-number {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, #2d8b5a, #1e7b47);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin: 0 auto 1rem;
+    }
+    
+    .step-card h4 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #1a3a2c;
+    }
+    
+    .step-card p {
+        color: #7a9a88;
+        font-size: 0.85rem;
+        line-height: 1.5;
+    }
+    
+    /* Footer */
+    .dn-footer {
+        background: #0a261a;
+        color: #c8e0d2;
+        margin-top: 4rem;
+        padding: 3rem 1rem 1.5rem;
+    }
+    
+        .dn-footer .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+    
+    .footer-brand {
+        font-size: 1.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #b8f2cf, #6bc99a);
+        background-clip: text;
+        -webkit-background-clip: text;
+        color: transparent;
+        margin-bottom: 1rem;
+    }
+    
+    .footer-links {
+        list-style: none;
+        padding: 0;
+    }
+    
+        .footer-links li {
+            margin-bottom: 0.75rem;
+        }
+    
+        .footer-links a {
+            text-decoration: none;
+            color: #b0d0be;
+            transition: color 0.2s;
+            font-size: 0.85rem;
+        }
+    
+            .footer-links a:hover {
+                color: #daf5e5;
+                padding-left: 4px;
+            }
+    
+    .social-links {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .social-link {
+        width: 36px;
+        height: 36px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        color: #c0e0ce;
+        text-decoration: none;
+    }
+    
+        .social-link:hover {
+            background: #2d8b5a;
+            transform: translateY(-2px);
+            color: white;
+        }
+    
+    .footer-bottom {
+        border-top: 1px solid rgba(180, 220, 190, 0.15);
+        padding-top: 1.5rem;
+        margin-top: 2rem;
+        text-align: center;
+        font-size: 0.75rem;
+    }
+    
+    /* Utility Classes */
+    .text-center {
+        text-align: center;
+    }
+    
+    .mx-auto {
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    @@media (max-width: 768px) {
+        .dn-hero-title {
+            font-size: 2.2rem;
+        }
+
+        .features-section {
+            padding: 2rem 1rem;
+            margin: 2rem 15px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+        }
+
+        .steps-container {
+            gap: 1rem;
+        }
+
+        .dn-category-card {
+            width: 140px;
+            padding: 1rem 0.5rem;
+        }
+
+        .dn-cat-icon i {
+            font-size: 1.4rem;
+        }
+    }
+</style>
+
+<!-- Hero Section -->
+<section class="dn-hero">
+    <div class="container">
         <p class="small text-uppercase fw-semibold text-success mb-2" style="letter-spacing: 0.12em;">Your healthcare companion</p>
         <h1 class="dn-hero-title mb-3">Diagnova — AI-guided symptom care</h1>
-        <p class="dn-hero-sub mb-4 col-lg-10 mx-auto">
+        <p class="dn-hero-sub mb-4">
             Chat about symptoms, look up medicines (OpenFDA), track vitals, and get specialist-style guidance — with emergency safeguards built in.
         </p>
 
-        <div class="d-flex flex-wrap justify-content-center gap-2 mb-2">
-            <a class="btn dn-btn-success dn-new-chat-pill shadow-sm" asp-area="Identity" asp-page="/Account/Login">New chat — sign in</a>
-            <a class="btn dn-btn-outline-success dn-new-chat-pill" asp-area="Identity" asp-page="/Account/Register">Create account</a>
+        <div class="d-flex flex-wrap justify-content-center gap-3 mb-4">
+            <a class="btn dn-btn-success" asp-area="Identity" asp-page="/Account/Login">
+                <i class="fas fa-comment-dots"></i> New chat — sign in
+            </a>
+            <a class="btn dn-btn-outline-success" asp-area="Identity" asp-page="/Account/Register">
+                <i class="fas fa-user-plus"></i> Create account
+            </a>
         </div>
 
-        <div class="dn-mascot" aria-hidden="true">
-            <partial name="_Icon" model='new IconModel { Id = "stethoscope", Size = 52, CssClass = "dn-icon dn-mascot-svg" }' />
-        </div>
-        <p class="fw-semibold mb-1">Welcome</p>
+        <p class="fw-semibold mb-1">Welcome to Diagnova</p>
         <p class="text-muted mb-0 small">How can we help you today?</p>
     </div>
 </section>
 
-<section class="container col-xl-10 pb-5">
-    <p class="text-center small text-muted mb-3">Jump to a topic</p>
-    <div class="dn-category-track px-1">
-        <div class="dn-category-scroll" role="list">
-        <a class="dn-category-card" asp-area="Identity" asp-page="/Account/Login" role="listitem">
-            <div class="dn-cat-label">Assistant</div>
-            <div class="dn-cat-icon">
-                <partial name="_Icon" model='new IconModel { Id = "chat", Size = 30, CssClass = "dn-icon" }' />
+<!-- Quick Access Cards -->
+<section class="category-section">
+    <div class="container">
+        <p class="text-center text-muted mb-3">Jump to a topic</p>
+        <div class="dn-category-track">
+            <div class="dn-category-scroll" role="list">
+                <a class="dn-category-card" asp-area="Identity" asp-page="/Account/Login" role="listitem">
+                    <div class="dn-cat-label">Assistant</div>
+                    <div class="dn-cat-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="small mt-2 fw-semibold">Symptoms</div>
+                </a>
+                <a class="dn-category-card" asp-area="Identity" asp-page="/Account/Login" role="listitem">
+                    <div class="dn-cat-label">Medicine</div>
+                    <div class="dn-cat-icon">
+                        <i class="fas fa-tablets"></i>
+                    </div>
+                    <div class="small mt-2 fw-semibold">Drug labels</div>
+                </a>
+                <a class="dn-category-card" asp-area="Identity" asp-page="/Account/Login" role="listitem">
+                    <div class="dn-cat-label">Vitals</div>
+                    <div class="dn-cat-icon">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <div class="small mt-2 fw-semibold">BP &amp; glucose</div>
+                </a>
+                <a class="dn-category-card" asp-area="Identity" asp-page="/Account/Login" role="listitem">
+                    <div class="dn-cat-label">Nearby</div>
+                    <div class="dn-cat-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div class="small mt-2 fw-semibold">Care finder</div>
+                </a>
+                <a class="dn-category-card" asp-area="Identity" asp-page="/Account/Login" role="listitem">
+                    <div class="dn-cat-label">History</div>
+                    <div class="dn-cat-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="small mt-2 fw-semibold">Past chats</div>
+                </a>
             </div>
-            <div class="small mt-2 fw-semibold">Symptoms</div>
-        </a>
-        <a class="dn-category-card" asp-area="Identity" asp-page="/Account/Login" role="listitem">
-            <div class="dn-cat-label">Medicine</div>
-            <div class="dn-cat-icon">
-                <partial name="_Icon" model='new IconModel { Id = "pill", Size = 30, CssClass = "dn-icon" }' />
+        </div>
+
+        <div class="text-center mt-4">
+            <div class="dn-composer-hint">
+                <i class="fas fa-lightbulb"></i>
+                <span>New to health chatbots? Keep descriptions clear: when it started, how strong, and what makes it better or worse.</span>
             </div>
-            <div class="small mt-2 fw-semibold">Drug labels</div>
-        </a>
-        <a class="dn-category-card" asp-area="Identity" asp-page="/Account/Login" role="listitem">
-            <div class="dn-cat-label">Vitals</div>
-            <div class="dn-cat-icon">
-                <partial name="_Icon" model='new IconModel { Id = "chart", Size = 30, CssClass = "dn-icon" }' />
-            </div>
-            <div class="small mt-2 fw-semibold">BP &amp; glucose</div>
-        </a>
-        <a class="dn-category-card" asp-area="Identity" asp-page="/Account/Login" role="listitem">
-            <div class="dn-cat-label">Nearby</div>
-            <div class="dn-cat-icon">
-                <partial name="_Icon" model='new IconModel { Id = "hospital", Size = 30, CssClass = "dn-icon" }' />
-            </div>
-            <div class="small mt-2 fw-semibold">Care finder</div>
-        </a>
-        <a class="dn-category-card" asp-area="Identity" asp-page="/Account/Login" role="listitem">
-            <div class="dn-cat-label">History</div>
-            <div class="dn-cat-icon">
-                <partial name="_Icon" model='new IconModel { Id = "clipboard", Size = 30, CssClass = "dn-icon" }' />
-            </div>
-            <div class="small mt-2 fw-semibold">Past chats</div>
-        </a>
         </div>
     </div>
-
-    <p class="text-center dn-composer-hint mt-4 mb-0">
-        New to health chatbots? Keep descriptions clear: when it started, how strong, and what makes it better or worse.
-    </p>
 </section>
+
+<!-- Section 1: Professional Features Showcase -->
+<section class="features-section">
+    <div class="text-center">
+        <span class="section-badge">
+            <i class="fas fa-star me-1"></i> Why Choose Diagnova
+        </span>
+        <h2 class="section-title">Intelligent healthcare, thoughtfully designed</h2>
+        <p class="section-subtitle">Everything you need for proactive health management in one secure platform</p>
+    </div>
+    
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-brain"></i>
+            </div>
+            <h3>AI-Powered Guidance</h3>
+            <p>Advanced symptom analysis with emergency safeguards. Clear, actionable steps without unnecessary alarm.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-database"></i>
+            </div>
+            <h3>OpenFDA Integration</h3>
+            <p>Direct access to official FDA drug labels, interactions, and warnings - always current and reliable.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <h3>Vitals Tracking</h3>
+            <p>Monitor BP, glucose, and weight over time. Identify trends and share meaningful data with your doctor.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h3>Privacy First</h3>
+            <p>Bank-grade encryption ensures your health data stays completely private, secure, and never shared.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Section 2: How It Works -->
+<section class="how-it-works">
+    <div class="text-center">
+        <span class="section-badge">
+            <i class="fas fa-compass me-1"></i> Simple Process
+        </span>
+        <h2 class="section-title">Start your health journey in minutes</h2>
+        <p class="section-subtitle">Getting started with Diagnova is quick and effortless</p>
+    </div>
+    
+    <div class="steps-container">
+        <div class="step-card">
+            <div class="step-number">1</div>
+            <h4>Create Account</h4>
+            <p>Sign up for free and set up your secure health profile</p>
+        </div>
+        <div class="step-card">
+            <div class="step-number">2</div>
+            <h4>Describe Symptoms</h4>
+            <p>Chat naturally with our AI about your health concerns</p>
+        </div>
+        <div class="step-card">
+            <div class="step-number">3</div>
+            <h4>Receive Guidance</h4>
+            <p>Get personalized recommendations and next steps</p>
+        </div>
+        <div class="step-card">
+            <div class="step-number">4</div>
+            <h4>Track Progress</h4>
+            <p>Monitor vitals and review your health journey over time</p>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="dn-footer">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="footer-brand">Diagnova</div>
+                <p class="small" style="opacity: 0.8; max-width: 280px;">AI-guided symptom care & medical intelligence. Empowering better health decisions for everyone.</p>
+                <div class="social-links">
+                    <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-github"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <h6 class="fw-semibold mb-3" style="color: #b0ddc0; font-size: 0.85rem;">Product</h6>
+                <ul class="footer-links">
+                    <li><a href="#">Symptom Checker</a></li>
+                    <li><a href="#">Medicine Guide</a></li>
+                    <li><a href="#">Vitals Tracker</a></li>
+                    <li><a href="#">Care Finder</a></li>
+                </ul>
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <h6 class="fw-semibold mb-3" style="color: #b0ddc0; font-size: 0.85rem;">Company</h6>
+                <ul class="footer-links">
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">Blog</a></li>
+                    <li><a href="#">Research</a></li>
+                    <li><a href="#">Careers</a></li>
+                </ul>
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <h6 class="fw-semibold mb-3" style="color: #b0ddc0; font-size: 0.85rem;">Resources</h6>
+                <ul class="footer-links">
+                    <li><a href="#">Help Center</a></li>
+                    <li><a href="#">API Access</a></li>
+                    <li><a href="#">Developer Docs</a></li>
+                    <li><a href="#">Status</a></li>
+                </ul>
+            </div>
+            <div class="col-lg-2">
+                <h6 class="fw-semibold mb-3" style="color: #b0ddc0; font-size: 0.85rem;">Legal</h6>
+                <ul class="footer-links">
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                    <li><a href="#">HIPAA Notice</a></li>
+                    <li><a href="#">Contact Support</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <span>© 2026 Diagnova Health. All rights reserved.</span>
+                <span><i class="fas fa-exclamation-triangle me-1"></i> Not for emergencies. Call 911 for immediate medical attention</span>
+            </div>
+        </div>
+    </div>
+</footer>
