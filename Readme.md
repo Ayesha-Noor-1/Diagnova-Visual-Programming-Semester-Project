@@ -238,7 +238,16 @@ All endpoints except availability checks require authentication.
 
 ---
 
+## Screenshots
 
+<!-- Add screenshots when available -->
+| Landing | Dashboard | AI Chat |
+|---------|-----------|---------|
+| _screenshot_ | _screenshot_ | _screenshot_ |
+
+| SOS | Medicine | Vitals |
+|-----|----------|--------|
+| _screenshot_ | _screenshot_ | _screenshot_ |
 
 ---
 
@@ -278,5 +287,5 @@ This project is submitted for **academic evaluation**. All rights reserved by th
 ---
 
 <p align="center">
-· Diagnova © 2026
+  Built with ❤️ for Visual Programming · Diagnova © 2026
 </p>

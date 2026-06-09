@@ -1,0 +1,67 @@
+# Diagnova — local Docker stack (web + SQL Server + MongoDB)
+# Usage: copy .env.example → .env, fill secrets, then: docker compose up --build
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: diagnova-sql
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q \"SELECT 1\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+
+  mongodb:
+    image: mongo:7
+    container_name: diagnova-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+      start_period: 20s
+
+  diagnova:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: diagnova-web
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+      ConnectionStrings__SqlServerConnection: "Server=sqlserver,1433;Database=DiagnovaAuth;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true"
+      ConnectionStrings__MongoDbConnection: "mongodb://mongodb:27017"
+      MongoDbSettings__DatabaseName: "DiagnovaMedicalDb"
+      OpenAI__BaseUrl: ${OPENAI_BASE_URL:-https://openrouter.ai/api/v1/}
+      OpenAI__Model: ${OPENAI_MODEL:-openai/gpt-4o-mini}
+      OpenAI__EmergencyRoutingModel: ${OPENAI_MODEL:-openai/gpt-4o-mini}
+      OpenAI__ApiKey: ${OPENAI_API_KEY}
+      OpenAI__Referer: ${OPENAI_REFERER:-http://localhost:8080}
+      OpenAI__SiteTitle: Diagnova
+      Email__SmtpServer: ${SMTP_SERVER:-}
+      Email__SmtpPort: ${SMTP_PORT:-587}
+      Email__SmtpUser: ${SMTP_USER:-}
+      Email__SmtpPassword: ${SMTP_PASSWORD:-}
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    restart: on-failure
+
+volumes:
+  sqlserver_data:
+  mongo_data:

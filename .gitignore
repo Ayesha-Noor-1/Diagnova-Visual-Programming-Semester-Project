@@ -19,6 +19,7 @@ appsettings.*.local.json
 **/secrets.json
 Diagnova/appsettings.json
 Diagnova/appsettings.Development.json
+.env
 *.Backup.tmp
 
 ## OS
