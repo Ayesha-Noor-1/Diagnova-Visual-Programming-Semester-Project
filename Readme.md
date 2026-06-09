@@ -238,16 +238,7 @@ All endpoints except availability checks require authentication.
 
 ---
 
-## Screenshots
 
-<!-- Add screenshots when available -->
-| Landing | Dashboard | AI Chat |
-|---------|-----------|---------|
-| _screenshot_ | _screenshot_ | _screenshot_ |
-
-| SOS | Medicine | Vitals |
-|-----|----------|--------|
-| _screenshot_ | _screenshot_ | _screenshot_ |
 
 ---
 
